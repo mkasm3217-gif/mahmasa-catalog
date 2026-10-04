@@ -954,4 +954,38 @@ textarea:focus {
     td {
         padding: 13px 15px;
     }
+    /* ترتيب جدول المنتجات على الموبايل */
+.table-wrap {
+    overflow-x: hidden;
+}
+
+table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.product-thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+}
+
+th,
+td {
+    padding: 10px 5px;
+    word-break: break-word;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.actions button {
+    width: 100%;
+    padding: 7px 4px;
+    font-size: 12px;
+}
 }

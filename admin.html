@@ -1546,15 +1546,11 @@ function displayProducts(products) {
 
             imageHtml = `
 
-                <img
-
-                    class="product-thumbnail"
-
-                    src="${IMAGE_URL}${encodeURIComponent(product.image)}"
-
-                    alt="${escapeHtml(product.name || "")}"
-
-                >
+              <img
+    class="product-thumbnail"
+    src="${product.image.startsWith("http") ? product.image : IMAGE_URL + encodeURIComponent(product.image)}"
+    alt="${escapeHtml(product.name || "")}"
+>
 
             `;
 
