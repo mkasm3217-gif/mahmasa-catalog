@@ -1,14 +1,15 @@
 const PRODUCTS_API =
-    "http://localhost:3000/api/products";
+    "https://mahmasa-catalog.onrender.com/api/products";
 
 const CATEGORIES_API =
-    "http://localhost:3000/api/categories";
+    "https://mahmasa-catalog.onrender.com/api/categories";
 
 const SETTINGS_API =
-    "http://localhost:3000/api/settings";
+    "https://mahmasa-catalog.onrender.com/api/settings";
 
 const IMAGE_URL =
-    "http://localhost:3000/images/";
+    "https://mahmasa-catalog.onrender.com/images/";
+
 
 
 let allProducts = [];
