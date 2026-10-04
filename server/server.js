@@ -29,6 +29,7 @@ app.use(
         origin: [
             "http://127.0.0.1:5500",
             "http://localhost:5500",
+            "http://9.9.9.84:5500",
             "https://mahmasa-catalog-1.onrender.com"
         ],
         credentials: true
