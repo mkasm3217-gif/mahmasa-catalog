@@ -259,7 +259,7 @@ function setLogo(
         element.innerHTML = `
 
             <img
-                src="${IMAGE_URL}${encodeURIComponent(shopSettings.logo)}"
+                src="${shopSettings.logo.startsWith("http") ? shopSettings.logo : IMAGE_URL + encodeURIComponent(shopSettings.logo)}"
                 alt="${escapeHtml(shopName)}"
             >
 
