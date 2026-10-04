@@ -869,8 +869,9 @@ function openProductDetails(id) {
 
     if (product.image) {
 
-        image.src =
-            `${IMAGE_URL}${encodeURIComponent(product.image)}`;
+        image.src = product.image.startsWith("http")
+    ? product.image
+    : IMAGE_URL + encodeURIComponent(product.image);
 
 
         image.alt =
