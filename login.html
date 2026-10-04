@@ -21,7 +21,7 @@
 <a class="back" href="index.html">العودة إلى واجهة الزبون</a>
 </main>
 <script>
-const BASE_URL = `http://${window.location.hostname}:3000`;
+const BASE_URL = "https://mahmasa-catalog.onrender.com";
 const form=document.getElementById("loginForm"),button=document.getElementById("loginButton"),message=document.getElementById("message");
 async function checkExistingSession(){try{const r=await fetch(`${BASE_URL}/api/admin/check`,{credentials:"include"});if(r.ok)window.location.replace("admin.html");}catch(e){}}
 form.addEventListener("submit",async(e)=>{e.preventDefault();message.classList.remove("show");button.disabled=true;button.textContent="جاري تسجيل الدخول...";try{const r=await fetch(`${BASE_URL}/api/admin/login`,{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({username:document.getElementById("username").value.trim(),password:document.getElementById("password").value})});const data=await r.json();if(!r.ok)throw new Error(data.message||"فشل تسجيل الدخول");window.location.replace("admin.html");}catch(err){message.textContent=err.message||"تعذر الاتصال بالسيرفر";message.classList.add("show");}finally{button.disabled=false;button.textContent="تسجيل الدخول";}});
