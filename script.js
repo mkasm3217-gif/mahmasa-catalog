@@ -872,7 +872,7 @@ function openProductDetails(id) {
         image.src = product.image.startsWith("http")
     ? product.image
     : IMAGE_URL + encodeURIComponent(product.image);
-
+console.log("DETAIL IMAGE:", image.src);
 
         image.alt =
             product.name || "";
