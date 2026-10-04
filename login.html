@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول | لوحة إدارة المحمصة</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh;font-family:Arial,"Segoe UI",Tahoma,sans-serif;background:linear-gradient(135deg,#f7f4ef,#eaf1eb);display:flex;align-items:center;justify-content:center;padding:20px;color:#1e231f}.login-card{width:min(100%,420px);background:#fff;border:1px solid #e6e9e5;border-radius:22px;padding:32px;box-shadow:0 20px 60px rgba(31,44,35,.10)}.logo{width:64px;height:64px;border-radius:18px;background:#294c38;color:#fff;display:flex;align-items:center;justify-content:center;font-size:27px;font-weight:800;margin:0 auto 18px}.head{text-align:center;margin-bottom:28px}.head h1{font-size:24px;margin-bottom:7px}.head p{font-size:13px;color:#747b75}.group{margin-bottom:16px}.group label{display:block;font-size:12px;font-weight:700;margin-bottom:7px}.group input{width:100%;height:46px;border:1px solid #dfe4df;border-radius:11px;padding:0 13px;font:inherit;outline:0}.group input:focus{border-color:#779382;box-shadow:0 0 0 3px rgba(41,76,56,.08)}button{width:100%;height:47px;border:0;border-radius:11px;background:#294c38;color:#fff;font:inherit;font-weight:700;cursor:pointer;margin-top:6px}button:hover{background:#203d2d}button:disabled{opacity:.65;cursor:wait}.message{display:none;margin-top:15px;padding:11px;border-radius:9px;background:#fff0f0;color:#a83434;font-size:12px;text-align:center}.message.show{display:block}.back{display:block;text-align:center;margin-top:19px;color:#657068;text-decoration:none;font-size:11px}
+</style>
+</head>
+<body>
+<main class="login-card">
+<div class="logo">م</div>
+<div class="head"><h1>لوحة إدارة المحمصة</h1><p>سجّل الدخول لإدارة المنتجات والأقسام والإعدادات</p></div>
+<form id="loginForm">
+<div class="group"><label for="username">اسم المستخدم</label><input id="username" type="text" autocomplete="username" required></div>
+<div class="group"><label for="password">كلمة المرور</label><input id="password" type="password" autocomplete="current-password" required></div>
+<button id="loginButton" type="submit">تسجيل الدخول</button>
+<div class="message" id="message"></div>
+</form>
+<a class="back" href="index.html">العودة إلى واجهة الزبون</a>
+</main>
+<script>
+const BASE_URL = `http://${window.location.hostname}:3000`;
+const form=document.getElementById("loginForm"),button=document.getElementById("loginButton"),message=document.getElementById("message");
+async function checkExistingSession(){try{const r=await fetch(`${BASE_URL}/api/admin/check`,{credentials:"include"});if(r.ok)window.location.replace("admin.html");}catch(e){}}
+form.addEventListener("submit",async(e)=>{e.preventDefault();message.classList.remove("show");button.disabled=true;button.textContent="جاري تسجيل الدخول...";try{const r=await fetch(`${BASE_URL}/api/admin/login`,{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({username:document.getElementById("username").value.trim(),password:document.getElementById("password").value})});const data=await r.json();if(!r.ok)throw new Error(data.message||"فشل تسجيل الدخول");window.location.replace("admin.html");}catch(err){message.textContent=err.message||"تعذر الاتصال بالسيرفر";message.classList.add("show");}finally{button.disabled=false;button.textContent="تسجيل الدخول";}});
+checkExistingSession();
+</script>
+</body>
+</html>
