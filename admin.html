@@ -3688,9 +3688,9 @@ function updateShopIdentity(settings) {
 
 
 
-        const logoSrc =
-
-            `${IMAGE_URL}${encodeURIComponent(settings.logo)}`;
+        const logoSrc = settings.logo.startsWith("http")
+    ? settings.logo
+    : '${IMAGE_URL}${encodeURIComponent(settings.logo)}';
 
 
 
