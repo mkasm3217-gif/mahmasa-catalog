@@ -36,6 +36,7 @@ app.use(
 );
 app.use(express.json());
 
+app.set("trust proxy",1);
 app.use(
     session({
         secret: process.env.SESSION_SECRET,
@@ -43,7 +44,8 @@ app.use(
         saveUninitialized: false,
         cookie: {
             httpOnly: true,
-            sameSite: "lax",
+            secure:true,
+            sameSite: "none",
             maxAge: 1000 * 60 * 60 * 8
         }
     })
