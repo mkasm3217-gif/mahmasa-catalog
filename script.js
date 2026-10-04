@@ -551,7 +551,7 @@ function displayProducts(products) {
 
                     <img
                         class="product-image"
-                       src="${product.image.startsWith('http') ? product.image : IMAGE_URL + encodeURIComponent(product.image)}"
+                       src="${product.image.startsWith("http") ? product.image : IMAGE_URL + encodeURIComponent(product.image)}"
                         alt="${escapeHtml(product.name || "")}"
                         loading="lazy"
                     >
