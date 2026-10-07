@@ -755,6 +755,20 @@ function renderBanners() {
         return `<article class="ad-slide"><img class="ad-slide-image" src="${imageSrc}" alt="${escapeHtml(banner.title || "إعلان المحمصة")}">${content}</article>`;
     }).join("");
 
+
+    track.querySelectorAll(".ad-slide").forEach((slide, index) => {
+        const banner = allBanners[index];
+        const rawImage = String(banner?.image || "");
+        const imageSrc = rawImage.startsWith("http")
+            ? rawImage
+            : IMAGE_URL + encodeURIComponent(rawImage);
+
+        slide.style.setProperty(
+            "--banner-image",
+            `url("${imageSrc.replace(/"/g, '\\"')}")`
+        );
+    });
+
     dots.innerHTML = allBanners.map((_, index) =>
         `<button type="button" class="ads-dot${index === 0 ? " active" : ""}" data-banner-index="${index}" aria-label="الإعلان ${index + 1}"></button>`
     ).join("");
