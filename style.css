@@ -26,27 +26,15 @@
 
 
 
-    --background: #F4EBDD;
+    --background: #8C6D57;
 
 
 
-    --surface: #FFFDF9;
+    --surface: #F7EFE7;
 
 
 
-    --surface-soft: #EFE4D3;
-
-
-
-
-
-
-
-    --text: #211B17;
-
-
-
-    --muted: #74675D;
+    --surface-soft: #D7C3B2;
 
 
 
@@ -54,15 +42,11 @@
 
 
 
-    --primary: #3A281F;
+    --text: #2B211B;
 
 
 
-    --primary-dark: #241711;
-
-
-
-    --primary-soft: #F1E4CF;
+    --muted: #765E4E;
 
 
 
@@ -70,11 +54,15 @@
 
 
 
-    --gold: #C89B2B;
+    --primary: #2F211A;
 
 
 
-    --gold-soft: #F5E8C5;
+    --primary-dark: #1D1511;
+
+
+
+    --primary-soft: #E5CFB6;
 
 
 
@@ -82,7 +70,19 @@
 
 
 
-    --border: #DFCFBC;
+    --gold: #D0A42D;
+
+
+
+    --gold-soft: #F1D77E;
+
+
+
+
+
+
+
+    --border: #C3A27D;
 
 
 
@@ -6335,5 +6335,303 @@ footer {
     .ad-slide-image {
         object-position: center;
     }
+}
+
+/* =========================================================
+   KRAMISH STOREFRONT BRAND THEME
+   Background chosen by owner: #8C6D57
+   Marble taupe + warm gold + espresso
+   COLORS ONLY — no layout or banner-size changes
+   ========================================================= */
+
+:root {
+    --background: #8C6D57;
+    --surface: #F7EFE7;
+    --surface-soft: #D7C3B2;
+
+    --text: #2B211B;
+    --muted: #765E4E;
+
+    --primary: #2F211A;
+    --primary-dark: #1D1511;
+    --primary-soft: #E5CFB6;
+
+    --gold: #D0A42D;
+    --gold-soft: #F1D77E;
+    --gold-dark: #A97C18;
+
+    --border: #C3A27D;
+
+    --shadow:
+        0 14px 45px
+        rgba(38, 25, 18, .16);
+}
+
+/* Header — warm stone with a gold line */
+.site-header {
+    background: rgba(247, 239, 231, .95);
+    border-bottom-color: rgba(208, 164, 45, .48);
+}
+
+.header-contact {
+    color: var(--primary);
+    border-color: rgba(169, 124, 24, .42);
+    background: #EBD8BE;
+}
+
+.header-contact:hover {
+    background: var(--gold);
+    color: #241A14;
+}
+
+/* Hero — based on the exact selected background, with subtle marble-like depth */
+.hero {
+    background:
+        radial-gradient(
+            circle at 18% 25%,
+            rgba(241, 215, 126, .22),
+            transparent 31%
+        ),
+        linear-gradient(
+            135deg,
+            #9A7B65 0%,
+            #8C6D57 52%,
+            #795B49 100%
+        );
+    border-bottom-color: rgba(208, 164, 45, .36);
+}
+
+.hero h2,
+.hero-text > p {
+    color: #FFF4E8;
+}
+
+.hero-text > p {
+    color: #EBDDD2;
+}
+
+.hero-label,
+.section-label {
+    background: rgba(241, 215, 126, .94);
+    color: #33241B;
+    border: 1px solid rgba(169, 124, 24, .30);
+}
+
+/* Main action — dark espresso with gold detail like the storefront trim */
+.primary-link {
+    background: var(--primary);
+    color: #FFF8EF;
+    border: 1px solid rgba(208, 164, 45, .72);
+    box-shadow: 0 8px 22px rgba(35, 23, 16, .18);
+}
+
+.primary-link:hover {
+    background: var(--primary-dark);
+    border-color: var(--gold);
+}
+
+/* Product section text sits directly on the selected background */
+.products-section .section-heading h2 {
+    color: #FFF5EA;
+}
+
+.products-section .section-heading p {
+    color: #E9D9CD;
+}
+
+.products-section .section-label {
+    background: var(--gold);
+    color: #2A1D16;
+}
+
+/* Search + filters */
+.search-box {
+    background: var(--surface);
+    border-color: rgba(208, 164, 45, .42);
+}
+
+.search-box input {
+    color: var(--text);
+}
+
+.search-box input::placeholder {
+    color: #8A7463;
+}
+
+.category-button {
+    background: #F8F1E9;
+    color: #5C4739;
+    border-color: rgba(169, 124, 24, .34);
+}
+
+.category-button:hover {
+    border-color: var(--gold);
+    color: #39281F;
+}
+
+.category-button.active {
+    background: var(--gold);
+    border-color: var(--gold-dark);
+    color: #261B15;
+    font-weight: 800;
+}
+
+/* Product cards — pale marble stone + restrained gold edge */
+.product-card {
+    background: var(--surface);
+    border-color: rgba(208, 164, 45, .42);
+    box-shadow: 0 8px 26px rgba(42, 27, 19, .10);
+}
+
+.product-image-wrapper {
+    background: #E8DACD;
+}
+
+.product-category {
+    background: rgba(241, 215, 126, .94);
+    color: #3A291F;
+}
+
+.product-content h3 {
+    color: var(--text);
+}
+
+.product-description,
+.product-price span,
+.product-weight span {
+    color: var(--muted);
+}
+
+.product-price strong {
+    color: var(--gold-dark);
+}
+
+.product-details-button {
+    background: #EAD8C4;
+    color: #3A291F;
+    border: 1px solid rgba(208, 164, 45, .36);
+}
+
+.product-details-button:hover {
+    background: var(--gold);
+    color: #241A14;
+}
+
+/* Loading / empty */
+.loader {
+    border-color: #CDB59E;
+    border-top-color: var(--gold);
+}
+
+.empty-icon {
+    background: var(--gold-soft);
+    color: #33241B;
+}
+
+/* Contact block — espresso + gold, matching black/gold storefront framing */
+.contact-card {
+    background:
+        linear-gradient(
+            135deg,
+            #34241C,
+            #241914
+        );
+    border: 1px solid rgba(208, 164, 45, .62);
+    box-shadow: 0 20px 60px rgba(31, 19, 13, .24);
+}
+
+.contact-card .section-label {
+    background: var(--gold);
+    color: #241914;
+}
+
+.contact-heading h2 {
+    color: #FFF5E8;
+}
+
+.contact-heading p {
+    color: #D9C6B5;
+}
+
+.contact-item {
+    border-color: rgba(240, 203, 102, .24);
+    background: rgba(255, 247, 234, .06);
+}
+
+.contact-item span {
+    color: #D2BFAE;
+}
+
+.contact-item strong {
+    color: #FFF5E8;
+}
+
+.whatsapp-button {
+    background: var(--gold);
+    color: #241914;
+}
+
+/* Modal */
+.product-modal {
+    background: rgba(29, 21, 17, .70);
+}
+
+.product-modal-box {
+    background: var(--surface);
+    border: 1px solid rgba(208, 164, 45, .40);
+}
+
+.modal-close {
+    background: rgba(247, 239, 231, .94);
+    color: var(--primary);
+}
+
+.modal-product-image,
+.modal-meta div {
+    background: #EADBCD;
+}
+
+.modal-meta div {
+    border-color: rgba(169, 124, 24, .28);
+}
+
+.modal-category {
+    background: var(--gold-soft);
+    color: #35261D;
+}
+
+/* Footer */
+footer {
+    background: #1D1511;
+    border-top: 1px solid rgba(208, 164, 45, .55);
+}
+
+.footer-content strong {
+    color: #F5E7D7;
+}
+
+.footer-content span,
+.footer-content p,
+.developer-link {
+    color: #CDB8A5;
+}
+
+.developer-link:hover {
+    color: var(--gold-soft);
+}
+
+/* Banner remains image-first; only frame/accent colors are harmonized */
+.ads-slider {
+    border-color: rgba(208, 164, 45, .42);
+    box-shadow: 0 18px 50px rgba(36, 23, 17, .18);
+}
+
+.ads-arrow {
+    color: #3B2A20;
+    border-color: rgba(208, 164, 45, .55);
+}
+
+.ads-dot.active {
+    background: var(--gold-soft);
 }
 
