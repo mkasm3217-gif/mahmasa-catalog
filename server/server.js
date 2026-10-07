@@ -142,7 +142,11 @@ const storage = new CloudinaryStorage({
 
         folder: "mahmasa-catalog",
 
-        allowed_formats: ["jpg", "jpeg", "png", "webp"]
+        allowed_formats: ["jpg", "jpeg", "png", "webp"],
+
+        // أي صيغة أخرى مدعومة من Cloudinary مثل HEIC/HEIF
+        // تتحول تلقائياً إلى JPG قبل الحفظ.
+        format: "jpg"
 
     }
 

@@ -26,7 +26,7 @@
 
 
 
-    <link rel="stylesheet" href="admin.css?v=6">
+    <link rel="stylesheet" href="admin.css?v=7">
 
 
 
@@ -1391,7 +1391,7 @@
 
 
 
-                                accept="image/*"
+                                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
 
 
 
@@ -2115,7 +2115,7 @@
 
 
 
-                            accept="image/*"
+                            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
 
 
 
@@ -2543,7 +2543,7 @@
 
                     id="bannerImage"
 
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
 
                 >
 
@@ -8692,6 +8692,13 @@ document
 
             if (!file) return;
 
+            if (isHeicFile(file)) {
+                document
+                    .getElementById("shopLogoPreview")
+                    .textContent = "HEIC";
+                return;
+            }
+
 
 
 
@@ -8826,6 +8833,21 @@ const bannerFormTitle = document.getElementById("bannerFormTitle");
 const bannerImagePreview = document.getElementById("bannerImagePreview");
 const saveBannerButton = document.getElementById("saveBannerButton");
 
+
+function isHeicFile(file) {
+    if (!file) return false;
+
+    const type = String(file.type || "").toLowerCase();
+    const name = String(file.name || "").toLowerCase();
+
+    return (
+        type === "image/heic" ||
+        type === "image/heif" ||
+        name.endsWith(".heic") ||
+        name.endsWith(".heif")
+    );
+}
+
 function getBannerImageSrc(image) {
     if (!image) return "";
     return image.startsWith("http") ? image : IMAGE_URL + encodeURIComponent(image);
@@ -8944,16 +8966,35 @@ bannerModal.addEventListener("click", (event) => {
 document.getElementById("bannerImage").addEventListener("change", (event) => {
     const file = event.target.files[0];
     if (!file) return;
+
     if (file.size > 20 * 1024 * 1024) {
         alert("حجم الصورة يجب ألا يتجاوز 20MB");
         event.target.value = "";
+        bannerImagePreview.classList.add("hidden");
+        bannerImagePreview.innerHTML = "";
         return;
     }
+
+    if (isHeicFile(file)) {
+        bannerImagePreview.textContent =
+            `تم اختيار ${file.name} — ستتحول تلقائياً إلى JPG عند الحفظ.`;
+        bannerImagePreview.classList.remove("hidden");
+        return;
+    }
+
     const reader = new FileReader();
+
     reader.onload = () => {
         bannerImagePreview.innerHTML = `<img src="${reader.result}" alt="">`;
         bannerImagePreview.classList.remove("hidden");
     };
+
+    reader.onerror = () => {
+        bannerImagePreview.textContent =
+            "تم اختيار الصورة، لكن المتصفح لم يستطع عرض المعاينة.";
+        bannerImagePreview.classList.remove("hidden");
+    };
+
     reader.readAsDataURL(file);
 });
 
