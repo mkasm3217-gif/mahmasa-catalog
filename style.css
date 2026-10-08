@@ -8910,3 +8910,205 @@ a.hub-contact-card:hover {
     }
 }
 
+/* =========================================================
+   PWA INSTALL PROMPT
+   ========================================================= */
+
+.pwa-install-card {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 200;
+    width: min(430px, calc(100% - 36px));
+    display: grid;
+    grid-template-columns: 58px 1fr;
+    gap: 12px 14px;
+    align-items: center;
+    padding: 16px;
+    border: 1px solid rgba(255, 215, 0, .42);
+    border-radius: 20px;
+    background:
+        radial-gradient(circle at 88% 14%, rgba(255, 215, 0, .12), transparent 34%),
+        linear-gradient(145deg, rgba(47, 33, 26, .98), rgba(29, 21, 17, .985));
+    color: #FFF7EC;
+    box-shadow: 0 22px 60px rgba(24, 15, 11, .34);
+    backdrop-filter: blur(14px);
+    animation: pwaSlideUp .34s ease both;
+}
+
+.pwa-install-logo {
+    width: 58px;
+    height: 58px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 215, 0, .38);
+    border-radius: 16px;
+    background: #F7EFE7;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .15);
+}
+
+.pwa-install-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pwa-install-copy {
+    min-width: 0;
+    padding-left: 28px;
+}
+
+.pwa-install-kicker {
+    display: block;
+    margin-bottom: 2px;
+    color: #F1D77E;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.pwa-install-copy strong {
+    display: block;
+    margin-bottom: 3px;
+    color: #FFD700;
+    font-size: 16px;
+    line-height: 1.45;
+}
+
+.pwa-install-copy p {
+    color: #D7C3B2;
+    font-size: 10px;
+    line-height: 1.65;
+}
+
+.pwa-install-button {
+    grid-column: 1 / -1;
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: 1px solid #F2D260;
+    border-radius: 13px;
+    background: linear-gradient(100deg, #E1AE24, #FFD75C, #D6A21D);
+    color: #25170F;
+    cursor: pointer;
+    font-weight: 900;
+    font-size: 13px;
+    box-shadow: 0 9px 24px rgba(218, 170, 36, .19);
+}
+
+.pwa-install-button svg,
+.pwa-install-fab svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.pwa-install-button:active {
+    transform: translateY(1px);
+}
+
+.pwa-install-close {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 30px;
+    height: 30px;
+    border: 1px solid rgba(255, 255, 255, .09);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .07);
+    color: #E7D7C6;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.pwa-install-fab {
+    position: fixed;
+    left: 16px;
+    bottom: 18px;
+    z-index: 190;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #F1CD55;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #FFD75C, #D4A21F);
+    color: #24160F;
+    cursor: pointer;
+    box-shadow: 0 12px 30px rgba(28, 17, 12, .30);
+    animation: pwaPulse 2.2s ease-in-out infinite;
+}
+
+.pwa-install-fab svg {
+    width: 24px;
+    height: 24px;
+}
+
+@keyframes pwaSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes pwaPulse {
+    0%, 100% {
+        box-shadow: 0 12px 30px rgba(28, 17, 12, .30), 0 0 0 0 rgba(255, 215, 0, .28);
+    }
+    50% {
+        box-shadow: 0 12px 30px rgba(28, 17, 12, .30), 0 0 0 9px rgba(255, 215, 0, 0);
+    }
+}
+
+@media (max-width: 600px) {
+    .pwa-install-card {
+        right: 10px;
+        bottom: 10px;
+        width: calc(100% - 20px);
+        grid-template-columns: 52px 1fr;
+        gap: 10px 11px;
+        padding: 13px;
+        border-radius: 17px;
+    }
+
+    .pwa-install-logo {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+    }
+
+    .pwa-install-copy {
+        padding-left: 24px;
+    }
+
+    .pwa-install-copy strong {
+        font-size: 14px;
+    }
+
+    .pwa-install-copy p {
+        font-size: 9px;
+    }
+
+    .pwa-install-button {
+        min-height: 44px;
+        font-size: 12px;
+    }
+
+    .pwa-install-fab {
+        left: 11px;
+        bottom: 11px;
+        width: 48px;
+        height: 48px;
+    }
+}
+

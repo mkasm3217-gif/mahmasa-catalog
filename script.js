@@ -2,7 +2,19 @@ const PRODUCTS_API =
 
 
 
+
+
+
+
     "https://mahmasa-catalog.onrender.com/api/products";
+
+
+
+
+
+
+
+
 
 
 
@@ -14,7 +26,19 @@ const CATEGORIES_API =
 
 
 
+
+
+
+
     "https://mahmasa-catalog.onrender.com/api/categories";
+
+
+
+
+
+
+
+
 
 
 
@@ -26,13 +50,31 @@ const SETTINGS_API =
 
 
 
+
+
+
+
     "https://mahmasa-catalog.onrender.com/api/settings";
+
+
+
+
 
 
 
 const BANNERS_API =
 
+
+
     "https://mahmasa-catalog.onrender.com/api/banners";
+
+
+
+
+
+
+
+
 
 
 
@@ -44,7 +86,27 @@ const IMAGE_URL =
 
 
 
+
+
+
+
     "https://mahmasa-catalog.onrender.com/images/";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -68,7 +130,23 @@ let allProducts = [];
 
 
 
+
+
+
+
+
+
+
+
 let allCategories = [];
+
+
+
+
+
+
+
+
 
 
 
@@ -84,7 +162,23 @@ let currentCategory = "all";
 
 
 
+
+
+
+
+
+
+
+
 let currentSearch = "";
+
+
+
+
+
+
+
+
 
 
 
@@ -94,9 +188,15 @@ let currentSearch = "";
 
 let shopSettings = null;
 
+
+
 let allBanners = [];
 
+
+
 let currentBannerIndex = 0;
+
+
 
 let bannerTimer = null;
 
@@ -110,7 +210,23 @@ let bannerTimer = null;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // ========================================
+
+
+
+
 
 
 
@@ -118,7 +234,19 @@ let bannerTimer = null;
 
 
 
+
+
+
+
 // ========================================
+
+
+
+
+
+
+
+
 
 
 
@@ -130,7 +258,15 @@ const productsGrid =
 
 
 
+
+
+
+
     document.getElementById(
+
+
+
+
 
 
 
@@ -138,7 +274,19 @@ const productsGrid =
 
 
 
+
+
+
+
     );
+
+
+
+
+
+
+
+
 
 
 
@@ -150,7 +298,15 @@ const categoriesContainer =
 
 
 
+
+
+
+
     document.getElementById(
+
+
+
+
 
 
 
@@ -158,7 +314,19 @@ const categoriesContainer =
 
 
 
+
+
+
+
     );
+
+
+
+
+
+
+
+
 
 
 
@@ -170,7 +338,15 @@ const productSearch =
 
 
 
+
+
+
+
     document.getElementById(
+
+
+
+
 
 
 
@@ -178,7 +354,19 @@ const productSearch =
 
 
 
+
+
+
+
     );
+
+
+
+
+
+
+
+
 
 
 
@@ -190,7 +378,15 @@ const loadingState =
 
 
 
+
+
+
+
     document.getElementById(
+
+
+
+
 
 
 
@@ -198,7 +394,19 @@ const loadingState =
 
 
 
+
+
+
+
     );
+
+
+
+
+
+
+
+
 
 
 
@@ -210,7 +418,15 @@ const emptyState =
 
 
 
+
+
+
+
     document.getElementById(
+
+
+
+
 
 
 
@@ -218,7 +434,23 @@ const emptyState =
 
 
 
+
+
+
+
     );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -234,7 +466,15 @@ const productModal =
 
 
 
+
+
+
+
     document.getElementById(
+
+
+
+
 
 
 
@@ -242,7 +482,19 @@ const productModal =
 
 
 
+
+
+
+
     );
+
+
+
+
+
+
+
+
 
 
 
@@ -254,11 +506,23 @@ const closeProductModalButton =
 
 
 
+
+
+
+
     document.getElementById(
 
 
 
+
+
+
+
         "closeProductModal"
+
+
+
+
 
 
 
@@ -274,7 +538,23 @@ const closeProductModalButton =
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // ========================================
+
+
+
+
 
 
 
@@ -282,7 +562,19 @@ const closeProductModalButton =
 
 
 
+
+
+
+
 // ========================================
+
+
+
+
+
+
+
+
 
 
 
@@ -291,6 +583,14 @@ const closeProductModalButton =
 
 
 async function initializeCatalog() {
+
+
+
+
+
+
+
+
 
 
 
@@ -310,11 +610,35 @@ async function initializeCatalog() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     const results =
 
 
 
+
+
+
+
         await Promise.allSettled([
+
+
+
+
+
+
+
+
 
 
 
@@ -330,7 +654,23 @@ async function initializeCatalog() {
 
 
 
+
+
+
+
+
+
+
+
             loadCategories(),
+
+
+
+
+
+
+
+
 
 
 
@@ -346,7 +686,23 @@ async function initializeCatalog() {
 
 
 
+
+
+
+
+
+
+
+
         loadBanners()
+
+
+
+
+
+
+
+
 
 
 
@@ -366,7 +722,27 @@ async function initializeCatalog() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     results.forEach((result) => {
+
+
+
+
+
+
+
+
 
 
 
@@ -378,11 +754,23 @@ async function initializeCatalog() {
 
 
 
+
+
+
+
             result.status ===
 
 
 
+
+
+
+
             "rejected"
+
+
+
+
 
 
 
@@ -394,11 +782,27 @@ async function initializeCatalog() {
 
 
 
+
+
+
+
+
+
+
+
             console.error(
 
 
 
+
+
+
+
                 result.reason
+
+
+
+
 
 
 
@@ -410,7 +814,23 @@ async function initializeCatalog() {
 
 
 
+
+
+
+
+
+
+
+
         }
+
+
+
+
+
+
+
+
 
 
 
@@ -430,7 +850,27 @@ async function initializeCatalog() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     showLoading(false);
+
+
+
+
+
+
+
+
 
 
 
@@ -446,6 +886,14 @@ async function initializeCatalog() {
 
 
 
+
+
+
+
+
+
+
+
     filterProducts();
 
 
@@ -454,7 +902,27 @@ async function initializeCatalog() {
 
 
 
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -478,7 +946,23 @@ initializeCatalog();
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // ========================================
+
+
+
+
 
 
 
@@ -486,7 +970,19 @@ initializeCatalog();
 
 
 
+
+
+
+
 // ========================================
+
+
+
+
+
+
+
+
 
 
 
@@ -502,7 +998,19 @@ async function loadSettings() {
 
 
 
+
+
+
+
+
+
+
+
     const response =
+
+
+
+
 
 
 
@@ -510,11 +1018,31 @@ async function loadSettings() {
 
 
 
+
+
+
+
             SETTINGS_API
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -534,7 +1062,19 @@ async function loadSettings() {
 
 
 
+
+
+
+
+
+
+
+
         throw new Error(
+
+
+
+
 
 
 
@@ -542,7 +1082,19 @@ async function loadSettings() {
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
 
 
 
@@ -562,11 +1114,39 @@ async function loadSettings() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     shopSettings =
 
 
 
+
+
+
+
         await response.json();
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -586,7 +1166,27 @@ async function loadSettings() {
 
 
 
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -606,7 +1206,19 @@ function applySettings() {
 
 
 
+
+
+
+
+
+
+
+
     if (!shopSettings) {
+
+
+
+
 
 
 
@@ -614,7 +1226,23 @@ function applySettings() {
 
 
 
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -630,7 +1258,15 @@ function applySettings() {
 
 
 
+
+
+
+
         shopSettings.shop_name ||
+
+
+
+
 
 
 
@@ -646,11 +1282,31 @@ function applySettings() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     const description =
 
 
 
+
+
+
+
         shopSettings.description ||
+
+
+
+
 
 
 
@@ -666,7 +1322,23 @@ function applySettings() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     document.title =
+
+
+
+
 
 
 
@@ -674,12 +1346,33 @@ function applySettings() {
 
 
 
+
+
+
+
     const contactShopName =
+
         document.getElementById("contactShopName");
 
+
+
     if (contactShopName) {
+
         contactShopName.textContent = name;
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -695,7 +1388,15 @@ function applySettings() {
 
 
 
+
+
+
+
         .getElementById(
+
+
+
+
 
 
 
@@ -703,11 +1404,23 @@ function applySettings() {
 
 
 
+
+
+
+
         )
 
 
 
+
+
+
+
         .textContent =
+
+
+
+
 
 
 
@@ -723,7 +1436,23 @@ function applySettings() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     document
+
+
+
+
 
 
 
@@ -731,7 +1460,15 @@ function applySettings() {
 
 
 
+
+
+
+
             "heroShopName"
+
+
+
+
 
 
 
@@ -739,7 +1476,15 @@ function applySettings() {
 
 
 
+
+
+
+
         .textContent =
+
+
+
+
 
 
 
@@ -755,7 +1500,23 @@ function applySettings() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     document
+
+
+
+
 
 
 
@@ -763,7 +1524,15 @@ function applySettings() {
 
 
 
+
+
+
+
             "shopDescription"
+
+
+
+
 
 
 
@@ -771,7 +1540,15 @@ function applySettings() {
 
 
 
+
+
+
+
         .textContent =
+
+
+
+
 
 
 
@@ -787,11 +1564,31 @@ function applySettings() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     document
 
 
 
+
+
+
+
         .getElementById(
+
+
+
+
 
 
 
@@ -799,11 +1596,23 @@ function applySettings() {
 
 
 
+
+
+
+
         )
 
 
 
+
+
+
+
         .textContent =
+
+
+
+
 
 
 
@@ -811,11 +1620,20 @@ function applySettings() {
 
 
 
+
+
+
+
     const footerRightsName =
+
         document.getElementById("footerRightsName");
 
+
+
     if (footerRightsName) {
+
         footerRightsName.textContent = name;
+
     }
 
 
@@ -828,7 +1646,23 @@ function applySettings() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     setLogo(
+
+
+
+
 
 
 
@@ -836,7 +1670,15 @@ function applySettings() {
 
 
 
+
+
+
+
         name
+
+
+
+
 
 
 
@@ -852,7 +1694,23 @@ function applySettings() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     setLogo(
+
+
+
+
 
 
 
@@ -860,18 +1718,45 @@ function applySettings() {
 
 
 
+
+
+
+
         name
 
 
 
+
+
+
+
     );
+
+
+
+
 
 
 
     setLogo(
+
         "footerLogo",
+
         name
+
     );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -887,7 +1772,15 @@ function applySettings() {
 
 
 
+
+
+
+
         .getElementById(
+
+
+
+
 
 
 
@@ -895,7 +1788,15 @@ function applySettings() {
 
 
 
+
+
+
+
         )
+
+
+
+
 
 
 
@@ -903,7 +1804,15 @@ function applySettings() {
 
 
 
+
+
+
+
             shopSettings.phone ||
+
+
+
+
 
 
 
@@ -911,24 +1820,46 @@ function applySettings() {
 
 
 
+
+
+
+
     const phoneItem =
+
         document.getElementById("phoneItem");
 
+
+
     if (phoneItem) {
+
         const rawPhone =
+
             String(shopSettings.phone || "").trim();
 
+
+
         if (rawPhone) {
+
             const phoneForLink =
+
                 rawPhone.replace(/[^\d+]/g, "");
 
+
+
             phoneItem.href =
+
                 `tel:${phoneForLink}`;
+
             phoneItem.classList.remove("is-disabled");
+
         } else {
+
             phoneItem.removeAttribute("href");
+
             phoneItem.classList.add("is-disabled");
+
         }
+
     }
 
 
@@ -941,11 +1872,31 @@ function applySettings() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     document
 
 
 
+
+
+
+
         .getElementById(
+
+
+
+
 
 
 
@@ -953,7 +1904,15 @@ function applySettings() {
 
 
 
+
+
+
+
         )
+
+
+
+
 
 
 
@@ -961,11 +1920,31 @@ function applySettings() {
 
 
 
+
+
+
+
             shopSettings.whatsapp ||
 
 
 
+
+
+
+
             "—";
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -981,7 +1960,15 @@ function applySettings() {
 
 
 
+
+
+
+
         .getElementById(
+
+
+
+
 
 
 
@@ -989,7 +1976,15 @@ function applySettings() {
 
 
 
+
+
+
+
         )
+
+
+
+
 
 
 
@@ -997,11 +1992,31 @@ function applySettings() {
 
 
 
+
+
+
+
             shopSettings.address ||
 
 
 
+
+
+
+
             "—";
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1015,7 +2030,11 @@ function applySettings() {
 
     configureWhatsapp();
 
+
+
     configureSocialLinks();
+
+
 
     configureDeveloperLink();
 
@@ -1025,7 +2044,27 @@ function applySettings() {
 
 
 
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1041,11 +2080,23 @@ function setLogo(
 
 
 
+
+
+
+
     elementId,
 
 
 
+
+
+
+
     shopName
+
+
+
+
 
 
 
@@ -1057,7 +2108,19 @@ function setLogo(
 
 
 
+
+
+
+
+
+
+
+
     const element =
+
+
+
+
 
 
 
@@ -1065,11 +2128,31 @@ function setLogo(
 
 
 
+
+
+
+
             elementId
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1085,7 +2168,15 @@ function setLogo(
 
 
 
+
+
+
+
         shopSettings &&
+
+
+
+
 
 
 
@@ -1093,7 +2184,19 @@ function setLogo(
 
 
 
+
+
+
+
     ) {
+
+
+
+
+
+
+
+
 
 
 
@@ -1109,7 +2212,19 @@ function setLogo(
 
 
 
+
+
+
+
+
+
+
+
             <img
+
+
+
+
 
 
 
@@ -1117,11 +2232,27 @@ function setLogo(
 
 
 
+
+
+
+
                 alt="${escapeHtml(shopName)}"
 
 
 
+
+
+
+
             >
+
+
+
+
+
+
+
+
 
 
 
@@ -1137,7 +2268,23 @@ function setLogo(
 
 
 
+
+
+
+
+
+
+
+
     } else {
+
+
+
+
+
+
+
+
 
 
 
@@ -1149,7 +2296,15 @@ function setLogo(
 
 
 
+
+
+
+
             shopName.charAt(0) ||
+
+
+
+
 
 
 
@@ -1161,7 +2316,23 @@ function setLogo(
 
 
 
+
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
 
 
 
@@ -1181,7 +2352,23 @@ function setLogo(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // ========================================
+
+
+
+
 
 
 
@@ -1189,7 +2376,19 @@ function setLogo(
 
 
 
+
+
+
+
 // ========================================
+
+
+
+
+
+
+
+
 
 
 
@@ -1198,47 +2397,89 @@ function setLogo(
 
 
 function configureWhatsapp() {
+
     const button = document.getElementById("whatsappButton");
+
     const footerWhatsapp = document.getElementById("footerWhatsapp");
 
+
+
     const whatsapp = String(
+
         shopSettings?.whatsapp || ""
+
     );
+
+
 
     const cleanNumber = whatsapp.replace(/\D/g, "");
 
+
+
     if (!cleanNumber) {
+
         if (button) {
+
             button.classList.add("hidden");
+
             button.href = "#";
+
         }
+
+
 
         if (footerWhatsapp) {
+
             footerWhatsapp.classList.add("hidden");
+
             footerWhatsapp.href = "#";
+
         }
 
+
+
         refreshFooterSocials();
+
         return;
+
     }
+
+
 
     const message =
+
         `مرحباً، أريد الاستفسار عن منتجات ${shopSettings?.shop_name || "المحمصة"}`;
 
+
+
     const href =
+
         `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
 
+
+
     if (button) {
+
         button.href = href;
+
         button.classList.remove("hidden");
+
     }
+
+
 
     if (footerWhatsapp) {
+
         footerWhatsapp.href = href;
+
         footerWhatsapp.classList.remove("hidden");
+
     }
 
+
+
     refreshFooterSocials();
+
 }
 
 
@@ -1251,7 +2492,23 @@ function configureWhatsapp() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // ========================================
+
+
+
+
 
 
 
@@ -1259,7 +2516,21 @@ function configureWhatsapp() {
 
 
 
+
+
+
+
 // ========================================
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1270,206 +2541,396 @@ function configureWhatsapp() {
 
 
 function normalizeExternalUrl(value) {
-
     const raw = String(value || "").trim();
-
     if (!raw) return "";
-
     return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-
 }
+
+
+
+
 
 
 
 function refreshFooterSocials() {
+
     const socialGroups = [
+
         document.getElementById("contactSocials"),
+
         document.getElementById("footerSocials")
+
     ].filter(Boolean);
 
+
+
     socialGroups.forEach((group) => {
+
         const hasVisibleLink =
+
             [...group.querySelectorAll("a")]
+
                 .some((item) =>
+
                     !item.classList.contains("hidden")
+
                 );
 
+
+
         group.classList.toggle(
+
             "hidden",
+
             !hasVisibleLink
+
         );
+
     });
+
 }
+
+
 
 function configureSocialLinks() {
+
     const facebookItem =
+
         document.getElementById("facebookItem");
 
+
+
     const instagramItem =
+
         document.getElementById("instagramItem");
 
+
+
     const footerFacebook =
+
         document.getElementById("footerFacebook");
 
+
+
     const footerInstagram =
+
         document.getElementById("footerInstagram");
 
+
+
     const facebook =
+
         normalizeExternalUrl(
+
             shopSettings?.facebook
+
         );
+
+
 
     const instagram =
+
         normalizeExternalUrl(
+
             shopSettings?.instagram
+
         );
 
+
+
     [facebookItem, footerFacebook]
+
         .filter(Boolean)
+
         .forEach((item) => {
+
             item.href = facebook || "#";
+
             item.classList.toggle(
+
                 "hidden",
+
                 !facebook
+
             );
+
         });
+
+
 
     [instagramItem, footerInstagram]
+
         .filter(Boolean)
+
         .forEach((item) => {
+
             item.href = instagram || "#";
+
             item.classList.toggle(
+
                 "hidden",
+
                 !instagram
+
             );
+
         });
 
+
+
     refreshFooterSocials();
+
 }
+
+
+
+
+
+
 
 
 
 
 
 function configureDeveloperLink() {
+
     const section =
+
         document.getElementById(
+
             "developerSection"
+
         );
+
+
 
     const divider =
+
         document.getElementById(
+
             "developerDivider"
+
         );
 
+
+
     const link =
+
         document.getElementById(
+
             "developerWhatsapp"
+
         );
+
+
 
     if (!link) return;
 
+
+
     const cleanNumber = String(
+
         shopSettings?.developer_whatsapp || ""
+
     ).replace(/\D/g, "");
 
+
+
     if (!cleanNumber) {
+
         link.classList.add("hidden");
+
         link.href = "#";
 
+
+
         if (section) {
+
             section.classList.add("hidden");
+
         }
+
+
 
         if (divider) {
+
             divider.classList.add("hidden");
+
         }
 
+
+
         return;
+
     }
 
+
+
     const message =
+
         "مرحباً، تواصلت معك من خلال موقع المحمصة.";
 
+
+
     link.href =
+
         `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+
+
 
     link.classList.remove("hidden");
 
+
+
     if (section) {
+
         section.classList.remove("hidden");
+
     }
 
+
+
     if (divider) {
+
         divider.classList.remove("hidden");
+
     }
+
 }
+
+
+
+
 
 
 
 async function loadBanners() {
 
+
+
     const response = await fetch(BANNERS_API);
+
+
 
     if (!response.ok) throw new Error("فشل تحميل الإعلانات");
 
+
+
     allBanners = await response.json();
 
+
+
     renderBanners();
+
+
 
 }
 
 
 
+
+
+
+
 function renderBanners() {
+
+
 
     const section = document.getElementById("adsSection");
 
+
+
     const track = document.getElementById("adsTrack");
+
+
 
     const dots = document.getElementById("adsDots");
 
+
+
     const prev = document.getElementById("adsPrev");
 
+
+
     const next = document.getElementById("adsNext");
+
+
 
     if (!section || !track || !dots) return;
 
 
 
+
+
+
+
     stopBannerTimer();
+
+
 
     if (!Array.isArray(allBanners) || !allBanners.length) {
 
+
+
         section.classList.add("hidden");
+
+
 
         track.innerHTML = "";
 
+
+
         dots.innerHTML = "";
 
+
+
         return;
+
+
 
     }
 
 
 
+
+
+
+
     section.classList.remove("hidden");
+
+
 
     currentBannerIndex = 0;
 
+
+
     track.innerHTML = allBanners.map((banner) => {
+
+
 
         const rawImage = String(banner.image || "");
 
+
+
         const imageSrc = rawImage.startsWith("http") ? rawImage : IMAGE_URL + encodeURIComponent(rawImage);
+
+
 
         const title = banner.title ? `<h3>${escapeHtml(banner.title)}</h3>` : "";
 
+
+
         const description = banner.description ? `<p>${escapeHtml(banner.description)}</p>` : "";
+
+
 
         const content = title || description ? `<div class="ad-slide-content">${title}${description}</div>` : "";
 
+
+
         return `<article class="ad-slide"><img class="ad-slide-image" src="${imageSrc}" alt="${escapeHtml(banner.title || "إعلان المحمصة")}">${content}</article>`;
+
+
 
     }).join("");
 
@@ -1477,129 +2938,261 @@ function renderBanners() {
 
 
 
+
+
+
+
+
+
     track.querySelectorAll(".ad-slide").forEach((slide, index) => {
+
+
 
         const banner = allBanners[index];
 
+
+
         const rawImage = String(banner?.image || "");
+
+
 
         const imageSrc = rawImage.startsWith("http")
 
+
+
             ? rawImage
+
+
 
             : IMAGE_URL + encodeURIComponent(rawImage);
 
 
 
+
+
+
+
         slide.style.setProperty(
+
+
 
             "--banner-image",
 
-            `url("${imageSrc.replace(/"/g, '\\\\"')}")`
+
+
+            `url("${imageSrc}")`
+
+
 
         );
 
+
+
     });
+
+
+
+
 
 
 
     dots.innerHTML = allBanners.map((_, index) =>
 
+
+
         `<button type="button" class="ads-dot${index === 0 ? " active" : ""}" data-banner-index="${index}" aria-label="الإعلان ${index + 1}"></button>`
+
+
 
     ).join("");
 
 
 
+
+
+
+
     const multiple = allBanners.length > 1;
+
+
 
     if (prev) prev.style.display = multiple ? "" : "none";
 
+
+
     if (next) next.style.display = multiple ? "" : "none";
+
+
 
     dots.style.display = multiple ? "" : "none";
 
+
+
     showBanner(0);
+
+
 
     if (multiple) startBannerTimer();
 
+
+
 }
+
+
+
+
 
 
 
 function showBanner(index) {
 
+
+
     const track = document.getElementById("adsTrack");
+
+
 
     if (!track || !allBanners.length) return;
 
+
+
     currentBannerIndex = (index + allBanners.length) % allBanners.length;
+
+
 
     track.style.transform = `translateX(${currentBannerIndex * 100}%)`;
 
+
+
     document.querySelectorAll(".ads-dot").forEach((dot, i) => {
+
+
 
         dot.classList.toggle("active", i === currentBannerIndex);
 
+
+
     });
 
+
+
 }
+
+
+
+
 
 
 
 function nextBanner() { showBanner(currentBannerIndex + 1); }
 
+
+
 function previousBanner() { showBanner(currentBannerIndex - 1); }
+
+
+
+
 
 
 
 function startBannerTimer() {
 
+
+
     stopBannerTimer();
+
+
 
     bannerTimer = window.setInterval(nextBanner, 5000);
 
+
+
 }
+
+
 
 function stopBannerTimer() {
 
+
+
     if (bannerTimer) {
+
+
 
         window.clearInterval(bannerTimer);
 
+
+
         bannerTimer = null;
+
+
 
     }
 
+
+
 }
+
+
 
 function resetBannerTimer() {
 
+
+
     if (allBanners.length > 1) startBannerTimer();
 
+
+
 }
+
+
+
+
 
 
 
 document.getElementById("adsNext")?.addEventListener("click", () => { nextBanner(); resetBannerTimer(); });
 
+
+
 document.getElementById("adsPrev")?.addEventListener("click", () => { previousBanner(); resetBannerTimer(); });
+
+
 
 document.getElementById("adsDots")?.addEventListener("click", (event) => {
 
+
+
     const dot = event.target.closest("[data-banner-index]");
+
+
 
     if (!dot) return;
 
+
+
     showBanner(Number(dot.dataset.bannerIndex));
+
+
 
     resetBannerTimer();
 
+
+
 });
+
+
 
 document.getElementById("adsSlider")?.addEventListener("mouseenter", stopBannerTimer);
 
+
+
 document.getElementById("adsSlider")?.addEventListener("mouseleave", resetBannerTimer);
+
+
+
+
 
 
 
@@ -1611,7 +3204,19 @@ async function loadCategories() {
 
 
 
+
+
+
+
+
+
+
+
     const response =
+
+
+
+
 
 
 
@@ -1619,11 +3224,31 @@ async function loadCategories() {
 
 
 
+
+
+
+
             CATEGORIES_API
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1643,7 +3268,19 @@ async function loadCategories() {
 
 
 
+
+
+
+
+
+
+
+
         throw new Error(
+
+
+
+
 
 
 
@@ -1651,7 +3288,19 @@ async function loadCategories() {
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
 
 
 
@@ -1671,7 +3320,23 @@ async function loadCategories() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     allCategories =
+
+
+
+
 
 
 
@@ -1683,7 +3348,27 @@ async function loadCategories() {
 
 
 
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1703,7 +3388,23 @@ function displayCategories() {
 
 
 
+
+
+
+
+
+
+
+
     categoriesContainer.innerHTML = `
+
+
+
+
+
+
+
+
 
 
 
@@ -1715,7 +3416,15 @@ function displayCategories() {
 
 
 
+
+
+
+
             type="button"
+
+
+
+
 
 
 
@@ -1723,7 +3432,15 @@ function displayCategories() {
 
 
 
+
+
+
+
             data-category="all"
+
+
+
+
 
 
 
@@ -1731,11 +3448,27 @@ function displayCategories() {
 
 
 
+
+
+
+
             الكل
 
 
 
+
+
+
+
         </button>
+
+
+
+
+
+
+
+
 
 
 
@@ -1755,7 +3488,23 @@ function displayCategories() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     allCategories.forEach(
+
+
+
+
 
 
 
@@ -1767,7 +3516,19 @@ function displayCategories() {
 
 
 
+
+
+
+
+
+
+
+
             const button =
+
+
+
+
 
 
 
@@ -1775,11 +3536,31 @@ function displayCategories() {
 
 
 
+
+
+
+
                     "button"
 
 
 
+
+
+
+
                 );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1795,7 +3576,23 @@ function displayCategories() {
 
 
 
+
+
+
+
                 "button";
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1811,7 +3608,23 @@ function displayCategories() {
 
 
 
+
+
+
+
                 "category-button";
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1827,7 +3640,23 @@ function displayCategories() {
 
 
 
+
+
+
+
                 category.name;
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1843,7 +3672,23 @@ function displayCategories() {
 
 
 
+
+
+
+
                 category.name;
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1859,11 +3704,23 @@ function displayCategories() {
 
 
 
+
+
+
+
                 .appendChild(
 
 
 
+
+
+
+
                     button
+
+
+
+
 
 
 
@@ -1875,11 +3732,31 @@ function displayCategories() {
 
 
 
+
+
+
+
+
+
+
+
         }
 
 
 
+
+
+
+
     );
+
+
+
+
+
+
+
+
 
 
 
@@ -1899,7 +3776,23 @@ function displayCategories() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // ========================================
+
+
+
+
 
 
 
@@ -1907,7 +3800,19 @@ function displayCategories() {
 
 
 
+
+
+
+
 // ========================================
+
+
+
+
+
+
+
+
 
 
 
@@ -1923,7 +3828,19 @@ async function loadProducts() {
 
 
 
+
+
+
+
+
+
+
+
     const response =
+
+
+
+
 
 
 
@@ -1931,11 +3848,31 @@ async function loadProducts() {
 
 
 
+
+
+
+
             PRODUCTS_API
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1955,7 +3892,19 @@ async function loadProducts() {
 
 
 
+
+
+
+
+
+
+
+
         throw new Error(
+
+
+
+
 
 
 
@@ -1963,7 +3912,19 @@ async function loadProducts() {
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
 
 
 
@@ -1983,7 +3944,23 @@ async function loadProducts() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     allProducts =
+
+
+
+
 
 
 
@@ -1995,7 +3972,27 @@ async function loadProducts() {
 
 
 
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2015,7 +4012,19 @@ function filterProducts() {
 
 
 
+
+
+
+
+
+
+
+
     let filtered =
+
+
+
+
 
 
 
@@ -2031,7 +4040,23 @@ function filterProducts() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     if (
+
+
+
+
 
 
 
@@ -2039,7 +4064,15 @@ function filterProducts() {
 
 
 
+
+
+
+
         "all"
+
+
+
+
 
 
 
@@ -2051,7 +4084,19 @@ function filterProducts() {
 
 
 
+
+
+
+
+
+
+
+
         filtered =
+
+
+
+
 
 
 
@@ -2059,7 +4104,15 @@ function filterProducts() {
 
 
 
+
+
+
+
                 (product) =>
+
+
+
+
 
 
 
@@ -2067,7 +4120,15 @@ function filterProducts() {
 
 
 
+
+
+
+
                     currentCategory
+
+
+
+
 
 
 
@@ -2079,7 +4140,27 @@ function filterProducts() {
 
 
 
+
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2099,11 +4180,27 @@ function filterProducts() {
 
 
 
+
+
+
+
+
+
+
+
         const search =
 
 
 
+
+
+
+
             currentSearch
+
+
+
+
 
 
 
@@ -2119,7 +4216,23 @@ function filterProducts() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         filtered =
+
+
+
+
 
 
 
@@ -2127,7 +4240,19 @@ function filterProducts() {
 
 
 
+
+
+
+
                 (product) => {
+
+
+
+
+
+
+
+
 
 
 
@@ -2143,7 +4268,23 @@ function filterProducts() {
 
 
 
+
+
+
+
+
+
+
+
                         product.name,
+
+
+
+
+
+
+
+
 
 
 
@@ -2159,6 +4300,14 @@ function filterProducts() {
 
 
 
+
+
+
+
+
+
+
+
                         product.category,
 
 
@@ -2167,7 +4316,23 @@ function filterProducts() {
 
 
 
+
+
+
+
+
+
+
+
                         product.weight
+
+
+
+
+
+
+
+
 
 
 
@@ -2187,7 +4352,23 @@ function filterProducts() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     return fields.some(
+
+
+
+
 
 
 
@@ -2195,7 +4376,15 @@ function filterProducts() {
 
 
 
+
+
+
+
                             String(
+
+
+
+
 
 
 
@@ -2203,7 +4392,15 @@ function filterProducts() {
 
 
 
+
+
+
+
                             )
+
+
+
+
 
 
 
@@ -2211,7 +4408,15 @@ function filterProducts() {
 
 
 
+
+
+
+
                             .includes(
+
+
+
+
 
 
 
@@ -2219,7 +4424,15 @@ function filterProducts() {
 
 
 
+
+
+
+
                             )
+
+
+
+
 
 
 
@@ -2231,11 +4444,31 @@ function filterProducts() {
 
 
 
+
+
+
+
+
+
+
+
                 }
 
 
 
+
+
+
+
             );
+
+
+
+
+
+
+
+
 
 
 
@@ -2255,7 +4488,23 @@ function filterProducts() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     displayProducts(
+
+
+
+
 
 
 
@@ -2263,7 +4512,19 @@ function filterProducts() {
 
 
 
+
+
+
+
     );
+
+
+
+
+
+
+
+
 
 
 
@@ -2283,7 +4544,27 @@ function filterProducts() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 function displayProducts(products) {
+
+
+
+
+
+
+
+
 
 
 
@@ -2303,11 +4584,31 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     if (
 
 
 
+
+
+
+
         products.length === 0
+
+
+
+
 
 
 
@@ -2319,7 +4620,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
         emptyState
+
+
+
+
 
 
 
@@ -2327,11 +4640,23 @@ function displayProducts(products) {
 
 
 
+
+
+
+
             .remove(
 
 
 
+
+
+
+
                 "hidden"
+
+
+
+
 
 
 
@@ -2343,7 +4668,23 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
         return;
+
+
+
+
+
+
+
+
 
 
 
@@ -2363,7 +4704,23 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     emptyState
+
+
+
+
 
 
 
@@ -2371,11 +4728,23 @@ function displayProducts(products) {
 
 
 
+
+
+
+
         .add(
 
 
 
+
+
+
+
             "hidden"
+
+
+
+
 
 
 
@@ -2391,7 +4760,23 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     products.forEach(
+
+
+
+
 
 
 
@@ -2403,7 +4788,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
             const card =
+
+
+
+
 
 
 
@@ -2411,7 +4808,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                     "article"
+
+
+
+
 
 
 
@@ -2427,11 +4832,39 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             card.className =
 
 
 
+
+
+
+
                 "product-card";
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2455,7 +4888,27 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             if (product.image) {
+
+
+
+
+
+
+
+
 
 
 
@@ -2471,7 +4924,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
                     <img
+
+
+
+
 
 
 
@@ -2479,7 +4944,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                        src="${product.image.startsWith("http") ? product.image : IMAGE_URL + encodeURIComponent(product.image)}"
+
+
+
+
 
 
 
@@ -2487,7 +4960,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                         loading="lazy"
+
+
+
+
 
 
 
@@ -2499,7 +4980,23 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
                 `;
+
+
+
+
+
+
+
+
 
 
 
@@ -2515,7 +5012,23 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
                 imageHtml = `
+
+
+
+
+
+
+
+
 
 
 
@@ -2527,7 +5040,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                         class="product-image-placeholder"
+
+
+
+
 
 
 
@@ -2535,7 +5056,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                         ${escapeHtml(
+
+
+
+
 
 
 
@@ -2543,7 +5072,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                                 product.name ||
+
+
+
+
 
 
 
@@ -2551,7 +5088,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                             ).charAt(0)
+
+
+
+
 
 
 
@@ -2559,7 +5104,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                     </div>
+
+
+
+
+
+
+
+
 
 
 
@@ -2575,7 +5132,27 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
             }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2595,7 +5172,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
                 <div
+
+
+
+
 
 
 
@@ -2603,7 +5192,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                 >
+
+
+
+
+
+
+
+
 
 
 
@@ -2619,7 +5220,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
                     <span
+
+
+
+
 
 
 
@@ -2627,7 +5240,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                     >
+
+
+
+
 
 
 
@@ -2635,7 +5256,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                             product.category ||
+
+
+
+
 
 
 
@@ -2643,7 +5272,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                         )}
+
+
+
+
 
 
 
@@ -2655,7 +5292,27 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
                 </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2671,7 +5328,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                     class="product-content"
+
+
+
+
 
 
 
@@ -2683,7 +5348,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
                     <h3>
+
+
+
+
 
 
 
@@ -2691,7 +5368,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                             product.name ||
+
+
+
+
 
 
 
@@ -2699,7 +5384,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                         )}
+
+
+
+
 
 
 
@@ -2715,7 +5408,23 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     <p
+
+
+
+
 
 
 
@@ -2723,7 +5432,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                     >
+
+
+
+
 
 
 
@@ -2731,7 +5448,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                             product.description ||
+
+
+
+
 
 
 
@@ -2739,7 +5464,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                         )}
+
+
+
+
 
 
 
@@ -2755,11 +5488,31 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     <div
 
 
 
+
+
+
+
                         class="product-bottom"
+
+
+
+
 
 
 
@@ -2771,7 +5524,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
                         <div
+
+
+
+
 
 
 
@@ -2779,7 +5544,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                         >
+
+
+
+
+
+
+
+
 
 
 
@@ -2791,7 +5568,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                                 السعر
+
+
+
+
 
 
 
@@ -2803,7 +5588,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
                             <strong>
+
+
+
+
 
 
 
@@ -2811,11 +5608,23 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                                     product.price
 
 
 
+
+
+
+
                                 )} ل.س
+
+
+
+
 
 
 
@@ -2827,7 +5636,27 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
                         </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2843,7 +5672,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                             class="product-weight"
+
+
+
+
 
 
 
@@ -2855,11 +5692,27 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
                             <span>
 
 
 
+
+
+
+
                                 الوزن
+
+
+
+
 
 
 
@@ -2871,7 +5724,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
                             <strong>
+
+
+
+
 
 
 
@@ -2879,7 +5744,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                                     product.weight ||
+
+
+
+
 
 
 
@@ -2887,7 +5760,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                                 )}
+
+
+
+
 
 
 
@@ -2899,7 +5780,23 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
                         </div>
+
+
+
+
+
+
+
+
 
 
 
@@ -2908,6 +5805,14 @@ function displayProducts(products) {
 
 
                     </div>
+
+
+
+
+
+
+
+
 
 
 
@@ -2927,7 +5832,23 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 <button
+
+
+
+
 
 
 
@@ -2935,7 +5856,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                     class="product-details-button"
+
+
+
+
 
 
 
@@ -2943,7 +5872,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                 >
+
+
+
+
 
 
 
@@ -2951,7 +5888,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                 </button>
+
+
+
+
+
+
+
+
 
 
 
@@ -2971,7 +5920,23 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             productsGrid
+
+
+
+
 
 
 
@@ -2979,7 +5944,15 @@ function displayProducts(products) {
 
 
 
+
+
+
+
                     card
+
+
+
+
 
 
 
@@ -2991,11 +5964,31 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
         }
 
 
 
+
+
+
+
     );
+
+
+
+
+
+
+
+
 
 
 
@@ -3015,7 +6008,23 @@ function displayProducts(products) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // ========================================
+
+
+
+
 
 
 
@@ -3023,7 +6032,19 @@ function displayProducts(products) {
 
 
 
+
+
+
+
 // ========================================
+
+
+
+
+
+
+
+
 
 
 
@@ -3035,11 +6056,23 @@ categoriesContainer
 
 
 
+
+
+
+
     .addEventListener(
 
 
 
+
+
+
+
         "click",
+
+
+
+
 
 
 
@@ -3051,7 +6084,19 @@ categoriesContainer
 
 
 
+
+
+
+
+
+
+
+
             const button =
+
+
+
+
 
 
 
@@ -3059,7 +6104,15 @@ categoriesContainer
 
 
 
+
+
+
+
                     ".category-button"
+
+
+
+
 
 
 
@@ -3075,7 +6128,23 @@ categoriesContainer
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             if (!button) {
+
+
+
+
 
 
 
@@ -3083,7 +6152,23 @@ categoriesContainer
 
 
 
+
+
+
+
             }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3099,7 +6184,15 @@ categoriesContainer
 
 
 
+
+
+
+
                 .querySelectorAll(
+
+
+
+
 
 
 
@@ -3107,11 +6200,23 @@ categoriesContainer
 
 
 
+
+
+
+
                 )
 
 
 
+
+
+
+
                 .forEach(
+
+
+
+
 
 
 
@@ -3123,7 +6228,19 @@ categoriesContainer
 
 
 
+
+
+
+
+
+
+
+
                         item
+
+
+
+
 
 
 
@@ -3131,11 +6248,23 @@ categoriesContainer
 
 
 
+
+
+
+
                             .remove(
 
 
 
+
+
+
+
                                 "active"
+
+
+
+
 
 
 
@@ -3147,11 +6276,35 @@ categoriesContainer
 
 
 
+
+
+
+
+
+
+
+
                     }
 
 
 
+
+
+
+
                 );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3167,7 +6320,15 @@ categoriesContainer
 
 
 
+
+
+
+
                 .classList
+
+
+
+
 
 
 
@@ -3175,11 +6336,31 @@ categoriesContainer
 
 
 
+
+
+
+
                     "active"
 
 
 
+
+
+
+
                 );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3195,7 +6376,23 @@ categoriesContainer
 
 
 
+
+
+
+
                 button.dataset.category;
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3215,7 +6412,19 @@ categoriesContainer
 
 
 
+
+
+
+
+
+
+
+
         }
+
+
+
+
 
 
 
@@ -3231,7 +6440,23 @@ categoriesContainer
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // ========================================
+
+
+
+
 
 
 
@@ -3239,7 +6464,19 @@ categoriesContainer
 
 
 
+
+
+
+
 // ========================================
+
+
+
+
+
+
+
+
 
 
 
@@ -3251,11 +6488,23 @@ productSearch
 
 
 
+
+
+
+
     .addEventListener(
 
 
 
+
+
+
+
         "input",
+
+
+
+
 
 
 
@@ -3267,7 +6516,19 @@ productSearch
 
 
 
+
+
+
+
+
+
+
+
             currentSearch =
+
+
+
+
 
 
 
@@ -3275,7 +6536,15 @@ productSearch
 
 
 
+
+
+
+
                     .value
+
+
+
+
 
 
 
@@ -3291,6 +6560,18 @@ productSearch
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             filterProducts();
 
 
@@ -3299,7 +6580,19 @@ productSearch
 
 
 
+
+
+
+
+
+
+
+
         }
+
+
+
+
 
 
 
@@ -3315,7 +6608,23 @@ productSearch
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // ========================================
+
+
+
+
 
 
 
@@ -3323,7 +6632,19 @@ productSearch
 
 
 
+
+
+
+
 // ========================================
+
+
+
+
+
+
+
+
 
 
 
@@ -3335,11 +6656,23 @@ productsGrid
 
 
 
+
+
+
+
     .addEventListener(
 
 
 
+
+
+
+
         "click",
+
+
+
+
 
 
 
@@ -3351,7 +6684,19 @@ productsGrid
 
 
 
+
+
+
+
+
+
+
+
             const button =
+
+
+
+
 
 
 
@@ -3359,11 +6704,31 @@ productsGrid
 
 
 
+
+
+
+
                     "[data-product-id]"
 
 
 
+
+
+
+
                 );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3379,7 +6744,15 @@ productsGrid
 
 
 
+
+
+
+
                 return;
+
+
+
+
 
 
 
@@ -3395,7 +6768,23 @@ productsGrid
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             const id =
+
+
+
+
 
 
 
@@ -3403,7 +6792,15 @@ productsGrid
 
 
 
+
+
+
+
                     button
+
+
+
+
 
 
 
@@ -3411,7 +6808,15 @@ productsGrid
 
 
 
+
+
+
+
                         .productId
+
+
+
+
 
 
 
@@ -3427,11 +6832,31 @@ productsGrid
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             openProductDetails(
 
 
 
+
+
+
+
                 id
+
+
+
+
 
 
 
@@ -3443,11 +6868,35 @@ productsGrid
 
 
 
+
+
+
+
+
+
+
+
         }
 
 
 
+
+
+
+
     );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3467,7 +6916,19 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
     const product =
+
+
+
+
 
 
 
@@ -3475,7 +6936,15 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
             (item) =>
+
+
+
+
 
 
 
@@ -3483,11 +6952,31 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
                 Number(id)
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3503,7 +6992,15 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
         return;
+
+
+
+
 
 
 
@@ -3519,7 +7016,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     document
+
+
+
+
 
 
 
@@ -3527,7 +7040,15 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
             "modalProductCategory"
+
+
+
+
 
 
 
@@ -3535,11 +7056,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
         .textContent =
 
 
 
+
+
+
+
             product.category ||
+
+
+
+
 
 
 
@@ -3555,7 +7088,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     document
+
+
+
+
 
 
 
@@ -3563,7 +7112,15 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
             "modalProductName"
+
+
+
+
 
 
 
@@ -3571,11 +7128,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
         .textContent =
 
 
 
+
+
+
+
             product.name ||
+
+
+
+
 
 
 
@@ -3591,7 +7160,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     document
+
+
+
+
 
 
 
@@ -3599,7 +7184,15 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
             "modalProductDescription"
+
+
+
+
 
 
 
@@ -3607,11 +7200,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
         .textContent =
 
 
 
+
+
+
+
             product.description ||
+
+
+
+
 
 
 
@@ -3627,7 +7232,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     document
+
+
+
+
 
 
 
@@ -3635,7 +7256,15 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
             "modalProductWeight"
+
+
+
+
 
 
 
@@ -3643,11 +7272,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
         .textContent =
 
 
 
+
+
+
+
             product.weight ||
+
+
+
+
 
 
 
@@ -3663,7 +7304,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     document
+
+
+
+
 
 
 
@@ -3671,7 +7328,15 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
             "modalProductPrice"
+
+
+
+
 
 
 
@@ -3679,7 +7344,15 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
         .textContent =
+
+
+
+
 
 
 
@@ -3695,7 +7368,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     const image =
+
+
+
+
 
 
 
@@ -3703,11 +7392,31 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
             "modalProductImage"
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3723,7 +7432,15 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
         document.getElementById(
+
+
+
+
 
 
 
@@ -3731,7 +7448,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3751,11 +7484,27 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
         image.src = product.image.startsWith("http")
 
 
 
+
+
+
+
     ? product.image
+
+
+
+
 
 
 
@@ -3771,7 +7520,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         image.alt =
+
+
+
+
 
 
 
@@ -3787,7 +7552,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         image.style.display =
+
+
+
+
 
 
 
@@ -3803,11 +7584,35 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         placeholder.style.display =
 
 
 
+
+
+
+
             "none";
+
+
+
+
+
+
+
+
 
 
 
@@ -3823,11 +7628,27 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
         image.removeAttribute(
 
 
 
+
+
+
+
             "src"
+
+
+
+
 
 
 
@@ -3843,7 +7664,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         image.style.display =
+
+
+
+
 
 
 
@@ -3859,7 +7696,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         placeholder.style.display =
+
+
+
+
 
 
 
@@ -3875,7 +7728,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         placeholder.textContent =
+
+
+
+
 
 
 
@@ -3883,7 +7752,15 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
                 product.name ||
+
+
+
+
 
 
 
@@ -3891,7 +7768,19 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
             ).charAt(0);
+
+
+
+
+
+
+
+
 
 
 
@@ -3911,7 +7800,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     productModal
+
+
+
+
 
 
 
@@ -3919,11 +7824,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
         .add(
 
 
 
+
+
+
+
             "show"
+
+
+
+
 
 
 
@@ -3939,7 +7856,23 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     document.body.style.overflow =
+
+
+
+
 
 
 
@@ -3951,7 +7884,27 @@ function openProductDetails(id) {
 
 
 
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3971,7 +7924,19 @@ function closeProductDetails() {
 
 
 
+
+
+
+
+
+
+
+
     productModal
+
+
+
+
 
 
 
@@ -3979,7 +7944,15 @@ function closeProductDetails() {
 
 
 
+
+
+
+
         .remove(
+
+
+
+
 
 
 
@@ -3987,7 +7960,23 @@ function closeProductDetails() {
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4003,6 +7992,10 @@ function closeProductDetails() {
 
 
 
+
+
+
+
         "";
 
 
@@ -4011,7 +8004,27 @@ function closeProductDetails() {
 
 
 
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4027,7 +8040,15 @@ closeProductModalButton
 
 
 
+
+
+
+
     .addEventListener(
+
+
+
+
 
 
 
@@ -4035,11 +8056,31 @@ closeProductModalButton
 
 
 
+
+
+
+
         closeProductDetails
 
 
 
+
+
+
+
     );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4055,11 +8096,23 @@ productModal
 
 
 
+
+
+
+
     .addEventListener(
 
 
 
+
+
+
+
         "click",
+
+
+
+
 
 
 
@@ -4071,7 +8124,19 @@ productModal
 
 
 
+
+
+
+
+
+
+
+
             if (
+
+
+
+
 
 
 
@@ -4079,11 +8144,27 @@ productModal
 
 
 
+
+
+
+
                 productModal
 
 
 
+
+
+
+
             ) {
+
+
+
+
+
+
+
+
 
 
 
@@ -4099,7 +8180,23 @@ productModal
 
 
 
+
+
+
+
+
+
+
+
             }
+
+
+
+
+
+
+
+
 
 
 
@@ -4111,7 +8208,23 @@ productModal
 
 
 
+
+
+
+
     );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4127,11 +8240,23 @@ document
 
 
 
+
+
+
+
     .addEventListener(
 
 
 
+
+
+
+
         "keydown",
+
+
+
+
 
 
 
@@ -4143,7 +8268,19 @@ document
 
 
 
+
+
+
+
+
+
+
+
             if (
+
+
+
+
 
 
 
@@ -4151,11 +8288,27 @@ document
 
 
 
+
+
+
+
                 "Escape"
 
 
 
+
+
+
+
             ) {
+
+
+
+
+
+
+
+
 
 
 
@@ -4171,6 +8324,14 @@ document
 
 
 
+
+
+
+
+
+
+
+
             }
 
 
@@ -4179,7 +8340,19 @@ document
 
 
 
+
+
+
+
+
+
+
+
         }
+
+
+
+
 
 
 
@@ -4195,7 +8368,23 @@ document
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // ========================================
+
+
+
+
 
 
 
@@ -4203,7 +8392,19 @@ document
 
 
 
+
+
+
+
 // ========================================
+
+
+
+
+
+
+
+
 
 
 
@@ -4219,7 +8420,23 @@ function showLoading(show) {
 
 
 
+
+
+
+
+
+
+
+
     if (show) {
+
+
+
+
+
+
+
+
 
 
 
@@ -4231,7 +8448,15 @@ function showLoading(show) {
 
 
 
+
+
+
+
             .classList
+
+
+
+
 
 
 
@@ -4239,11 +8464,31 @@ function showLoading(show) {
 
 
 
+
+
+
+
                 "hidden"
 
 
 
+
+
+
+
             );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4259,7 +8504,15 @@ function showLoading(show) {
 
 
 
+
+
+
+
             .classList
+
+
+
+
 
 
 
@@ -4267,11 +8520,27 @@ function showLoading(show) {
 
 
 
+
+
+
+
                 "hidden"
 
 
 
+
+
+
+
             );
+
+
+
+
+
+
+
+
 
 
 
@@ -4287,7 +8556,19 @@ function showLoading(show) {
 
 
 
+
+
+
+
+
+
+
+
         loadingState
+
+
+
+
 
 
 
@@ -4295,7 +8576,15 @@ function showLoading(show) {
 
 
 
+
+
+
+
             .add(
+
+
+
+
 
 
 
@@ -4303,7 +8592,23 @@ function showLoading(show) {
 
 
 
+
+
+
+
             );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4319,7 +8624,15 @@ function showLoading(show) {
 
 
 
+
+
+
+
             .classList
+
+
+
+
 
 
 
@@ -4327,7 +8640,15 @@ function showLoading(show) {
 
 
 
+
+
+
+
                 "hidden"
+
+
+
+
 
 
 
@@ -4339,7 +8660,23 @@ function showLoading(show) {
 
 
 
+
+
+
+
+
+
+
+
     }
+
+
+
+
+
+
+
+
 
 
 
@@ -4359,7 +8696,23 @@ function showLoading(show) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // ========================================
+
+
+
+
 
 
 
@@ -4367,7 +8720,19 @@ function showLoading(show) {
 
 
 
+
+
+
+
 // ========================================
+
+
+
+
+
+
+
+
 
 
 
@@ -4383,7 +8748,19 @@ function escapeHtml(value) {
 
 
 
+
+
+
+
+
+
+
+
     const div =
+
+
+
+
 
 
 
@@ -4391,11 +8768,31 @@ function escapeHtml(value) {
 
 
 
+
+
+
+
             "div"
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4411,7 +8808,15 @@ function escapeHtml(value) {
 
 
 
+
+
+
+
         String(
+
+
+
+
 
 
 
@@ -4419,7 +8824,23 @@ function escapeHtml(value) {
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4439,7 +8860,27 @@ function escapeHtml(value) {
 
 
 
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4459,7 +8900,19 @@ function formatPrice(value) {
 
 
 
+
+
+
+
+
+
+
+
     const number =
+
+
+
+
 
 
 
@@ -4475,11 +8928,31 @@ function formatPrice(value) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     if (
 
 
 
+
+
+
+
         Number.isNaN(number)
+
+
+
+
 
 
 
@@ -4491,7 +8964,23 @@ function formatPrice(value) {
 
 
 
+
+
+
+
+
+
+
+
         return "0";
+
+
+
+
+
+
+
+
 
 
 
@@ -4511,7 +9000,23 @@ function formatPrice(value) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     return number
+
+
+
+
 
 
 
@@ -4519,7 +9024,15 @@ function formatPrice(value) {
 
 
 
+
+
+
+
             "en-US",
+
+
+
+
 
 
 
@@ -4527,7 +9040,15 @@ function formatPrice(value) {
 
 
 
+
+
+
+
                 maximumFractionDigits: 2
+
+
+
+
 
 
 
@@ -4535,7 +9056,19 @@ function formatPrice(value) {
 
 
 
+
+
+
+
         );
+
+
+
+
+
+
+
+
 
 
 
@@ -4555,7 +9088,23 @@ function formatPrice(value) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 document
+
+
+
+
 
 
 
@@ -4563,7 +9112,15 @@ document
 
 
 
+
+
+
+
         "currentYear"
+
+
+
+
 
 
 
@@ -4571,7 +9128,15 @@ document
 
 
 
+
+
+
+
     .textContent =
+
+
+
+
 
 
 
@@ -4579,4 +9144,289 @@ document
 
 
 
+
+
+
+
             .getFullYear();
+
+// ========================================
+// PWA INSTALL
+// ========================================
+
+let deferredInstallPrompt = null;
+
+const pwaInstallCard =
+    document.getElementById("pwaInstallCard");
+
+const pwaInstallButton =
+    document.getElementById("pwaInstallButton");
+
+const pwaInstallClose =
+    document.getElementById("pwaInstallClose");
+
+const pwaInstallFab =
+    document.getElementById("pwaInstallFab");
+
+const pwaInstallTitle =
+    document.getElementById("pwaInstallTitle");
+
+const pwaInstallText =
+    document.getElementById("pwaInstallText");
+
+const PWA_DISMISS_KEY =
+    "kramish-pwa-install-dismissed-at";
+
+function isPwaStandalone() {
+    return (
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true
+    );
+}
+
+function isIosDevice() {
+    return /iphone|ipad|ipod/i.test(
+        window.navigator.userAgent
+    );
+}
+
+function hidePwaInstallUi() {
+    pwaInstallCard?.classList.add("hidden");
+    pwaInstallFab?.classList.add("hidden");
+}
+
+function showPwaInstallFab() {
+    if (!isPwaStandalone()) {
+        pwaInstallFab?.classList.remove("hidden");
+    }
+}
+
+function setDefaultInstallCopy() {
+    if (pwaInstallTitle) {
+        pwaInstallTitle.textContent =
+            "ثبّت التطبيق على هاتفك";
+    }
+
+    if (pwaInstallText) {
+        pwaInstallText.textContent =
+            "وصول أسرع للمحمصة من الشاشة الرئيسية بدون البحث عن الرابط كل مرة.";
+    }
+
+    const label =
+        pwaInstallButton?.querySelector("span");
+
+    if (label) {
+        label.textContent =
+            isIosDevice()
+                ? "طريقة التثبيت"
+                : "تثبيت التطبيق";
+    }
+}
+
+function showPwaInstallCard(force = false) {
+    if (
+        isPwaStandalone() ||
+        !pwaInstallCard
+    ) {
+        hidePwaInstallUi();
+        return;
+    }
+
+    if (!force) {
+        const dismissedAt =
+            Number(
+                localStorage.getItem(
+                    PWA_DISMISS_KEY
+                ) || 0
+            );
+
+        const oneDay =
+            24 * 60 * 60 * 1000;
+
+        if (
+            dismissedAt &&
+            Date.now() - dismissedAt < oneDay
+        ) {
+            showPwaInstallFab();
+            return;
+        }
+    }
+
+    setDefaultInstallCopy();
+    pwaInstallCard.classList.remove("hidden");
+    showPwaInstallFab();
+}
+
+function showManualInstallInstructions() {
+    if (!pwaInstallCard) return;
+
+    pwaInstallCard.classList.remove("hidden");
+
+    if (isIosDevice()) {
+        if (pwaInstallTitle) {
+            pwaInstallTitle.textContent =
+                "أضف التطبيق إلى الشاشة الرئيسية";
+        }
+
+        if (pwaInstallText) {
+            pwaInstallText.textContent =
+                "اضغط زر المشاركة في Safari، ثم اختر «إضافة إلى الشاشة الرئيسية».";
+        }
+    } else {
+        if (pwaInstallTitle) {
+            pwaInstallTitle.textContent =
+                "ثبّت تطبيق محمصة كراميش";
+        }
+
+        if (pwaInstallText) {
+            pwaInstallText.textContent =
+                "إذا لم تظهر نافذة التثبيت، افتح قائمة المتصفح واختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».";
+        }
+    }
+
+    const label =
+        pwaInstallButton?.querySelector("span");
+
+    if (label) {
+        label.textContent = "حسنًا";
+    }
+}
+
+window.addEventListener(
+    "beforeinstallprompt",
+    (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+
+        if (!isPwaStandalone()) {
+            showPwaInstallFab();
+            showPwaInstallCard();
+        }
+    }
+);
+
+pwaInstallButton?.addEventListener(
+    "click",
+    async () => {
+        if (isPwaStandalone()) {
+            hidePwaInstallUi();
+            return;
+        }
+
+        if (deferredInstallPrompt) {
+            deferredInstallPrompt.prompt();
+
+            const choice =
+                await deferredInstallPrompt
+                    .userChoice;
+
+            deferredInstallPrompt = null;
+
+            if (
+                choice.outcome === "accepted"
+            ) {
+                hidePwaInstallUi();
+                localStorage.removeItem(
+                    PWA_DISMISS_KEY
+                );
+            } else {
+                pwaInstallCard?.classList.add(
+                    "hidden"
+                );
+                showPwaInstallFab();
+            }
+
+            return;
+        }
+
+        if (
+            pwaInstallButton
+                ?.querySelector("span")
+                ?.textContent === "حسنًا"
+        ) {
+            pwaInstallCard?.classList.add(
+                "hidden"
+            );
+            showPwaInstallFab();
+            return;
+        }
+
+        showManualInstallInstructions();
+    }
+);
+
+pwaInstallClose?.addEventListener(
+    "click",
+    () => {
+        pwaInstallCard?.classList.add(
+            "hidden"
+        );
+
+        localStorage.setItem(
+            PWA_DISMISS_KEY,
+            String(Date.now())
+        );
+
+        showPwaInstallFab();
+    }
+);
+
+pwaInstallFab?.addEventListener(
+    "click",
+    () => {
+        showPwaInstallCard(true);
+    }
+);
+
+window.addEventListener(
+    "appinstalled",
+    () => {
+        deferredInstallPrompt = null;
+        hidePwaInstallUi();
+        localStorage.removeItem(
+            PWA_DISMISS_KEY
+        );
+    }
+);
+
+window.addEventListener(
+    "DOMContentLoaded",
+    () => {
+        if (isPwaStandalone()) {
+            hidePwaInstallUi();
+            return;
+        }
+
+        showPwaInstallFab();
+
+        window.setTimeout(
+            () => showPwaInstallCard(),
+            900
+        );
+    }
+);
+
+// Service Worker
+if ("serviceWorker" in navigator) {
+    window.addEventListener(
+        "load",
+        async () => {
+            try {
+                const registration =
+                    await navigator
+                        .serviceWorker
+                        .register(
+                            "./service-worker.js?v=1"
+                        );
+
+                registration.update();
+            } catch (error) {
+                console.error(
+                    "PWA service worker registration failed:",
+                    error
+                );
+            }
+        }
+    );
+}
+
