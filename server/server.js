@@ -32,6 +32,7 @@ const crypto = require("crypto");
 
 
 const session = require("express-session");
+const MySQLStore = require("express-mysql-session")(session);
 
 
 
@@ -160,58 +161,6 @@ app.set("trust proxy",1);
 // Local development runs over HTTP; Render uses HTTPS behind its trusted proxy.
 // Keep cross-site secure cookies in production while allowing localhost login.
 const SECURE_SESSION_COOKIES = process.env.RENDER === "true" || process.env.NODE_ENV === "production";
-
-
-
-app.use(
-
-
-
-    session({
-
-
-
-        secret: process.env.SESSION_SECRET,
-
-
-
-        resave: false,
-
-
-
-        saveUninitialized: false,
-
-
-
-        cookie: {
-
-
-
-            httpOnly: true,
-
-
-
-            secure: SECURE_SESSION_COOKIES,
-
-
-
-            sameSite: SECURE_SESSION_COOKIES ? "none" : "lax",
-
-
-
-            maxAge: 1000 * 60 * 60 * 8
-
-
-
-        }
-
-
-
-    })
-
-
-
-);
 
 
 
@@ -539,6 +488,39 @@ async function deleteImage(imageUrl) {
 
 
 
+// Aiven MySQL uses a project CA. Verify its certificate instead of disabling TLS checks.
+// Locally: server/certs/ca.pem. On Render: set AIVEN_CA_CERT_BASE64 in the environment.
+// Fail closed if the CA is missing or malformed; never fall back to insecure TLS.
+function loadAivenDatabaseSsl() {
+    const envCa = String(process.env.AIVEN_CA_CERT_BASE64 || "").trim();
+    let ca;
+    if (envCa) {
+        ca = Buffer.from(envCa, "base64").toString("utf8");
+    } else {
+        const caPath = path.join(__dirname, "certs", "ca.pem");
+        try {
+            ca = fs.readFileSync(caPath, "utf8");
+        } catch (error) {
+            throw new Error(
+                "Aiven CA certificate not found. Put ca.pem in server/certs/ " +
+                "or set AIVEN_CA_CERT_BASE64 on the hosting service.",
+                { cause: error }
+            );
+        }
+    }
+
+    if (!/-----BEGIN CERTIFICATE-----[\s\S]+-----END CERTIFICATE-----/.test(ca)) {
+        throw new Error("Invalid Aiven CA certificate: expected PEM certificate content.");
+    }
+    return {
+        ca,
+        rejectUnauthorized: true,
+        servername: process.env.DB_HOST
+    };
+}
+
+const AIVEN_DATABASE_SSL = loadAivenDatabaseSsl();
+
 const db = mysql.createConnection({
 
 
@@ -563,15 +545,7 @@ const db = mysql.createConnection({
 
 
 
-    ssl: {
-
-
-
-        rejectUnauthorized: false
-
-
-
-    }
+    ssl: AIVEN_DATABASE_SSL
 
 
 
@@ -590,10 +564,34 @@ const commercePool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 5,
     queueLimit: 0,
-    ssl: {
-        rejectUnauthorized: false
-    }
+    ssl: AIVEN_DATABASE_SSL
 }).promise();
+
+// نخزّن جلسات الإدارة في MySQL بدل MemoryStore الافتراضي غير المناسب للإنتاج.
+// نستخدم نفس pool الذي يحتوي إعداد SSL لاتصال Aiven. المكتبة لا تنقل خيار SSL
+// عند إنشائها pool خاصًّا بها، لذا تمرير الاتصال الموجود ضروري.
+const adminSessionStore = new MySQLStore({
+    createDatabaseTable: true,
+    clearExpired: true,
+    checkExpirationInterval: 15 * 60 * 1000,
+    expiration: 8 * 60 * 60 * 1000,
+    endConnectionOnClose: false,
+    schema: { tableName: "admin_sessions" }
+}, commercePool);
+
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    store: adminSessionStore,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: SECURE_SESSION_COOKIES,
+        sameSite: SECURE_SESSION_COOKIES ? "none" : "lax",
+        maxAge: 1000 * 60 * 60 * 8
+    }
+}));
+
 
 
 
@@ -625,89 +623,83 @@ const commercePool = mysql.createPool({
 
 
 
+// حماية أساسية من محاولات تخمين كلمة المرور. هذا الحد على مستوى العملية الواحدة،
+// وستُضاف حماية مشتركة مستمرة عبر قاعدة البيانات/الـproxy قبل التسليم التجاري.
+const ADMIN_LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const ADMIN_LOGIN_MAX_FAILURES = 8;
+const adminLoginFailures = new Map();
+
+function adminLoginClientKey(req) {
+    return String(req.ip || req.socket?.remoteAddress || "unknown");
+}
+
+function recordAdminLoginFailure(clientKey) {
+    const now = Date.now();
+    const previous = adminLoginFailures.get(clientKey);
+    const current = previous && previous.expiresAt > now
+        ? { failures: previous.failures + 1, expiresAt: previous.expiresAt }
+        : { failures: 1, expiresAt: now + ADMIN_LOGIN_WINDOW_MS };
+
+    // لا نسمح بزيادة حجم الذاكرة بلا حد عند التعرض لمحاولات آلية بعناوين كثيرة.
+    if (!adminLoginFailures.has(clientKey) && adminLoginFailures.size >= 5000) {
+        const firstKey = adminLoginFailures.keys().next().value;
+        adminLoginFailures.delete(firstKey);
+    }
+    adminLoginFailures.set(clientKey, current);
+}
+
 app.post("/api/admin/login", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const clientKey = adminLoginClientKey(req);
+    const now = Date.now();
+    const previous = adminLoginFailures.get(clientKey);
 
-
-
-
-
-
-
-    const { username, password } = req.body;
-
-
-
-
-
-
-
-    if (
-
-
-
-        username === process.env.ADMIN_USERNAME &&
-
-
-
-        password === process.env.ADMIN_PASSWORD
-
-
-
-    ) {
-
-
-
-        req.session.isAdmin = true;
-
-
-
-
-
-
-
-        return res.json({
-
-
-
-            message: "تم تسجيل الدخول بنجاح"
-
-
-
+    if (previous && previous.expiresAt <= now) {
+        adminLoginFailures.delete(clientKey);
+    } else if (previous && previous.failures >= ADMIN_LOGIN_MAX_FAILURES) {
+        res.set("Retry-After", String(Math.max(1, Math.ceil((previous.expiresAt - now) / 1000))));
+        return res.status(429).json({
+            message: "محاولات دخول كثيرة. انتظر 15 دقيقة من بداية المحاولات ثم حاول مجددًا"
         });
-
-
-
     }
 
+    // مهم: إذا لم تُضبط بيانات الإدارة في البيئة، نرفض الدخول بدل مقارنة undefined.
+    const expectedUsername = process.env.ADMIN_USERNAME;
+    const expectedPassword = process.env.ADMIN_PASSWORD;
+    if (typeof expectedUsername !== "string" || !expectedUsername.trim() ||
+        typeof expectedPassword !== "string" || !expectedPassword) {
+        return res.status(503).json({ message: "حساب المدير غير مهيّأ على السيرفر" });
+    }
 
+    const username = typeof req.body?.username === "string" ? req.body.username.trim() : "";
+    const password = typeof req.body?.password === "string" ? req.body.password : "";
+    const suppliedPasswordBytes = Buffer.from(password, "utf8");
+    const expectedPasswordBytes = Buffer.from(expectedPassword, "utf8");
+    const passwordMatches = suppliedPasswordBytes.length === expectedPasswordBytes.length &&
+        crypto.timingSafeEqual(suppliedPasswordBytes, expectedPasswordBytes);
 
+    if (username !== expectedUsername || !passwordMatches) {
+        recordAdminLoginFailure(clientKey);
+        return res.status(401).json({ message: "اسم المستخدم أو كلمة المرور غير صحيحة" });
+    }
 
-
-
-
-    return res.status(401).json({
-
-
-
-        message: "اسم المستخدم أو كلمة المرور غير صحيحة"
-
-
-
+    // تجديد معرّف الجلسة بعد نجاح المصادقة يمنع Session Fixation.
+    req.session.regenerate((regenerateError) => {
+        if (regenerateError) {
+            console.error("Admin session regeneration failed:", regenerateError);
+            return res.status(500).json({ message: "تعذر بدء جلسة آمنة، حاول مجددًا" });
+        }
+        req.session.isAdmin = true;
+        req.session.save((saveError) => {
+            if (saveError) {
+                console.error("Admin session save failed:", saveError);
+                return res.status(500).json({ message: "تعذر حفظ جلسة الدخول، حاول مجددًا" });
+            }
+            adminLoginFailures.delete(clientKey);
+            return res.json({ message: "تم تسجيل الدخول بنجاح" });
+        });
     });
-
-
-
 });
-
-
-
-
-
-
-
-
-
-
 
 app.get("/api/admin/check", (req, res) => {
 
@@ -5811,12 +5803,14 @@ const PORT = process.env.PORT || 3000;
 
 
 
-app.listen(PORT, "0.0.0.0", () => {
-
-
-
-    console.log(`Server running on port ${PORT}`);
-
-
-
+// لا نستقبل طلبات قبل التأكد من جاهزية جدول الجلسات واتصال Aiven.
+// إذا فشلت تهيئة المخزن نوقف التشغيل بدل جلسات لا تُحفظ بصمت.
+adminSessionStore.onReady().then(() => {
+    console.log("Admin MySQL session store ready");
+    app.listen(PORT, "0.0.0.0", () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}).catch((error) => {
+    console.error("Cannot initialize admin MySQL session store:", error);
+    process.exit(1);
 });
