@@ -608,6 +608,47 @@ app.use(session({
 
 
 // ========================================
+// ADMIN FRONTEND: served from the API origin, not the separate static site.
+// Login uses a first-party session cookie, including in private browsing.
+// Only these exact frontend files are exposed. Never publish server/ or .env.
+// ========================================
+const ADMIN_FRONTEND_DIR = path.resolve(__dirname, "..");
+
+function sendAdminFrontendHtml(res, fileName) {
+    res.set("Cache-Control", "no-store");
+    return res.sendFile(path.join(ADMIN_FRONTEND_DIR, fileName), (error) => {
+        if (error && !res.headersSent) {
+            console.error("Admin frontend file unavailable:", fileName, error.code);
+            res.status(error.statusCode === 404 ? 503 : 500)
+               .send("صفحة الإدارة غير متاحة مؤقتًا");
+        }
+    });
+}
+
+app.get("/login.html", (req, res) => {
+    if (req.session?.isAdmin) return res.redirect(302, "/admin.html");
+    return sendAdminFrontendHtml(res, "login.html");
+});
+
+app.get("/admin.html", (req, res) => {
+    if (!req.session?.isAdmin) {
+        res.set("Cache-Control", "no-store");
+        return res.redirect(302, "/login.html");
+    }
+    return sendAdminFrontendHtml(res, "admin.html");
+});
+
+// The admin page uses admin.css?v=7; an exact file route also serves the query URL.
+app.get("/admin.css", (_req, res) => {
+    return res.sendFile(path.join(ADMIN_FRONTEND_DIR, "admin.css"));
+});
+
+// The login/admin pages link to index.html to return to the customer catalog.
+app.get("/index.html", (_req, res) => {
+    return res.redirect(302, "https://mahmasa-catalog-1.onrender.com/");
+});
+
+// ========================================
 
 
 
