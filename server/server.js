@@ -571,7 +571,7 @@ const commercePool = mysql.createPool({
 // نستخدم نفس pool الذي يحتوي إعداد SSL لاتصال Aiven. المكتبة لا تنقل خيار SSL
 // عند إنشائها pool خاصًّا بها، لذا تمرير الاتصال الموجود ضروري.
 const adminSessionStore = new MySQLStore({
-    createDatabaseTable: true,
+    createDatabaseTable: false,
     clearExpired: true,
     checkExpirationInterval: 15 * 60 * 1000,
     expiration: 8 * 60 * 60 * 1000,
