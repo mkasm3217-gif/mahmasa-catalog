@@ -587,7 +587,9 @@ app.use(session({
     cookie: {
         httpOnly: true,
         secure: SECURE_SESSION_COOKIES,
-        sameSite: SECURE_SESSION_COOKIES ? "none" : "lax",
+        // Admin login and dashboard are served from this backend origin.
+        // Lax prevents a third-party site from submitting cookie-authenticated requests.
+        sameSite: "lax",
         maxAge: 1000 * 60 * 60 * 8
     }
 }));
@@ -5156,8 +5158,41 @@ app.put("/api/admin/commerce/settings", requireAdmin, async (req, res) => {
     }
 });
 
+// Basic public-order abuse protection. In-memory limits suit one small shop
+// and reset on deployment; a shared gateway limiter is needed if scaling to many instances.
+function publicApiRateLimit(maxRequests, windowMs) {
+    const counters = new Map();
+    return (req, res, next) => {
+        const now = Date.now();
+        const clientKey = String(req.ip || req.socket?.remoteAddress || "unknown");
+        let entry = counters.get(clientKey);
+        if (!entry || entry.resetAt <= now) {
+            entry = { count: 0, resetAt: now + windowMs };
+            counters.set(clientKey, entry);
+        }
+        if (entry.count >= maxRequests) {
+            res.set("Retry-After", String(Math.max(1, Math.ceil((entry.resetAt - now) / 1000))));
+            return res.status(429).json({
+                message: "تم إرسال طلبات كثيرة من نفس الشبكة. انتظر قليلًا ثم حاول مجددًا"
+            });
+        }
+        entry.count += 1;
+        // Avoid unbounded growth when many unique IPs reach the public API.
+        if (counters.size > 5000) {
+            for (const [key, value] of counters) {
+                if (value.resetAt <= now) counters.delete(key);
+            }
+            if (counters.size > 5000) counters.delete(counters.keys().next().value);
+        }
+        next();
+    };
+}
+const quoteRateLimit = publicApiRateLimit(120, 5 * 60 * 1000);
+const createOrderRateLimit = publicApiRateLimit(30, 10 * 60 * 1000);
+const lookupOrderRateLimit = publicApiRateLimit(60, 10 * 60 * 1000);
+
 // تسعير السلة من السيرفر: السعر الكامل + الحسم + رسوم التوصيل + النهائي.
-app.post("/api/orders/quote", async (req, res) => {
+app.post("/api/orders/quote", quoteRateLimit, async (req, res) => {
     const fulfillmentType = req.body.fulfillment_type === "delivery" ? "delivery" : "pickup";
 
     try {
@@ -5171,7 +5206,7 @@ app.post("/api/orders/quote", async (req, res) => {
     }
 });
 
-app.post("/api/orders", async (req, res) => {
+app.post("/api/orders", createOrderRateLimit, async (req, res) => {
     const customerName = safeText(req.body.customer_name, 120);
     const customerPhone = safeText(req.body.customer_phone, 50);
     const fulfillmentType = req.body.fulfillment_type === "delivery" ? "delivery" : "pickup";
@@ -5364,7 +5399,7 @@ app.get("/api/orders/track/:token", async (req, res) => {
 });
 
 // بديل في حال فتح الزبون الموقع من جهاز آخر: رقم الطلب + رقم الهاتف.
-app.post("/api/orders/lookup", async (req, res) => {
+app.post("/api/orders/lookup", lookupOrderRateLimit, async (req, res) => {
     const code = String(req.body.order_code || "").trim().toUpperCase().slice(0, 40);
     const phone = normalizePhone(req.body.phone);
 
