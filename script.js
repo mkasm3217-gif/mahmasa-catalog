@@ -14,6 +14,7 @@ const ORDER_QUOTE_API = `${API_BASE_URL}/api/orders/quote`;
 const ORDERS_API = `${API_BASE_URL}/api/orders`;
 let allProducts = [];
 let allCategories = [];
+let activeCoupons = [];
 let currentCategory = "all";
 let currentSearch = "";
 let shopSettings = null;
@@ -499,8 +500,23 @@ async function loadProducts() {
             "فشل تحميل المنتجات"
         );
     }
-    allProducts =
-        await response.json();
+    allProducts = await response.json();
+    activeCoupons = [];
+    try {
+        const couponResponse = await fetch(`${API_BASE_URL}/api/coupons/active`, { cache: "no-store" });
+        const coupons = couponResponse.ok ? await couponResponse.json() : [];
+        activeCoupons = coupons;
+        allProducts = allProducts.map((product) => ({
+            ...product,
+            coupon_badges: coupons.filter((coupon) => {
+                const ids = new Set((coupon.product_ids || []).map(Number));
+                const selected = ids.has(Number(product.id));
+                return coupon.product_scope === "include" ? selected : coupon.product_scope === "exclude" ? !selected : true;
+            })
+        }));
+    } catch (error) {
+        console.warn("تعذر تحميل شارات الكوبونات:", error.message);
+    }
 }
 function filterProducts() {
     let filtered =
@@ -626,6 +642,7 @@ function displayProducts(products) {
                             "منتج مختار بعناية."
                         )}
                     </p>
+                    ${(product.coupon_badges || []).length ? `<div class="product-coupon-badges" aria-label="الكوبونات المتاحة لهذا المنتج">${product.coupon_badges.map((coupon) => `<span class="product-coupon-badge"><strong>🏷️ ${escapeHtml(coupon.code)}</strong><small>${coupon.discount_type === "percent" ? `${formatPrice(coupon.discount_value)}% خصم` : `${formatPrice(coupon.discount_value)} ل.س خصم`}${Number(coupon.minimum_subtotal || 0) > 0 ? ` · للطلبات من ${formatPrice(coupon.minimum_subtotal)} ل.س` : ""}</small></span>`).join("")}</div>` : ""}
                     <div
                         class="product-bottom"
                     >
@@ -1391,6 +1408,68 @@ function serverCartItems() {
         item_note
     }));
 }
+function estimatedCartSubtotal() {
+    return Math.round(cartLines.reduce((sum, line) => {
+        const product = allProducts.find((item) => Number(item.id) === Number(line.product_id));
+        if (!product) return sum;
+        const price = Number(product.price) || 0;
+        let lineTotal = 0;
+        if (line.selection_mode === "unit") lineTotal = Math.round(price * Number(line.quantity || 0));
+        else if (line.selection_mode === "amount") lineTotal = Math.round(Number(line.requested_amount) || 0);
+        else lineTotal = Math.round(price * Number(line.weight_grams || 0) / 1000);
+        return sum + lineTotal;
+    }, 0));
+}
+function matchingProductCoupons(includeBelowMinimum = false) {
+    const productIds = new Set(cartLines.map((line) => Number(line.product_id)));
+    const claimedProductIds = new Set();
+    const subtotal = estimatedCartSubtotal();
+    return activeCoupons.filter((coupon) => {
+        if (coupon.product_scope !== "include") return false;
+        if (!includeBelowMinimum && subtotal < Number(coupon.minimum_subtotal || 0)) return false;
+        const matchingIds = (coupon.product_ids || []).map(Number).filter((id) => productIds.has(id) && !claimedProductIds.has(id));
+        if (!matchingIds.length) return false;
+        matchingIds.forEach((id) => claimedProductIds.add(id));
+        return true;
+    });
+}
+function matchingBroadCoupon(productCoupons, includeBelowMinimum = false) {
+    const subtotal = estimatedCartSubtotal();
+    if (!includeBelowMinimum && !cartLines.length) return null;
+    const claimedProductIds = new Set();
+    const productIds = new Set(cartLines.map((line) => Number(line.product_id)));
+    for (const coupon of productCoupons) {
+        (coupon.product_ids || []).map(Number).filter((id) => productIds.has(id))
+            .forEach((id) => claimedProductIds.add(id));
+    }
+    return activeCoupons.find((coupon) => {
+        if (coupon.product_scope === "include") return false;
+        if (!includeBelowMinimum && subtotal < Number(coupon.minimum_subtotal || 0)) return false;
+        return [...productIds].some((id) => !claimedProductIds.has(id) &&
+            (coupon.product_scope === "exclude" ? !(coupon.product_ids || []).map(Number).includes(id) : true));
+    }) || null;
+}
+function cartCouponSelection(includeBelowMinimum = false) {
+    const availableProductCoupons = matchingProductCoupons(includeBelowMinimum);
+    const productCouponsForBroad = availableProductCoupons.slice(0, 4);
+    const broadCoupon = matchingBroadCoupon(productCouponsForBroad, includeBelowMinimum);
+    return broadCoupon
+        ? [...productCouponsForBroad, broadCoupon]
+        : availableProductCoupons.slice(0, 5);
+}
+function cartCouponCodes() {
+    return [...new Set(cartCouponSelection()
+        .map((coupon) => String(coupon.code || "").trim().toUpperCase()).filter(Boolean))];
+}
+function couponMinimumHint(appliedCodes = []) {
+    const applied = new Set(appliedCodes.map((code) => String(code).toUpperCase()));
+    const subtotal = estimatedCartSubtotal();
+    const waiting = cartCouponSelection(true).filter((coupon) =>
+        !applied.has(String(coupon.code || "").toUpperCase()) && subtotal < Number(coupon.minimum_subtotal || 0));
+    if (!waiting.length) return "";
+    const minimum = Math.min(...waiting.map((coupon) => Number(coupon.minimum_subtotal || 0)));
+    return `يتفعّل العرض تلقائيًا عندما يصل مجموع المنتجات إلى ${formatPrice(minimum)} ل.س.`;
+}
 function lineDescription(item) {
     if (item.selection_mode === "unit") return `${item.quantity} قطعة/علبة`;
     if (item.selection_mode === "amount") return `حسب المبلغ: ${amountLabel(item.requested_amount)}`;
@@ -1473,11 +1552,21 @@ function showCartError(message) {
 }
 function fillQuote(quote) {
     setCartText("cartSubtotal", amountLabel(quote.subtotal));
-    setCartText("cartDiscount", `− ${amountLabel(quote.discount_amount)}`);
-    setCartText("cartDiscountLabel", `الخصم (${formatPrice(quote.discount_percent)}%)`);
+    const totalDiscount = Number(quote.discount_amount || 0) + Number(quote.coupon_discount_amount || 0);
+    setCartText("cartDiscount", `− ${amountLabel(totalDiscount)}`);
+    setCartText("cartDiscountLabel", quote.coupon_code
+        ? `${Number(quote.discount_amount || 0) > 0 ? "الخصم التلقائي + " : ""}كوبون ${quote.coupon_code}`
+        : `الخصم (${formatPrice(quote.discount_percent)}%)`);
     setCartText("cartDeliveryFee", amountLabel(quote.delivery_fee));
     setCartText("cartTotal", amountLabel(quote.total));
-    toggleCartElement("cartDiscountRow", Number(quote.discount_percent) > 0);
+    toggleCartElement("cartDiscountRow", totalDiscount > 0);
+    const appliedCodes = (quote.coupon_codes || []).map((code) => String(code));
+    const appliedTitles = quote.coupon_titles || [];
+    const appliedMessage = appliedCodes.length
+        ? `طُبّق تلقائيًا: ${appliedTitles.length ? appliedTitles.join("، ") : appliedCodes.join("، ")}.`
+        : "لا يوجد كوبون منطبق على المنتجات الحالية.";
+    const minimumMessage = couponMinimumHint(appliedCodes);
+    setCartText("cartCouponFeedback", [appliedMessage, minimumMessage].filter(Boolean).join(" "));
     toggleCartElement("cartDeliveryRow", fulfillmentType() === "delivery");
 }
 async function fetchCartJson(url, payload) {
@@ -1504,7 +1593,8 @@ function refreshQuote() {
     resetTotals();
     setCartText("cartTotal", "جاري الحساب...");
     showCartError("");
-    const payload = { items: serverCartItems(), fulfillment_type: fulfillmentType() };
+    const couponCodes = cartCouponCodes();
+    const payload = { items: serverCartItems(), fulfillment_type: fulfillmentType(), coupon_code: couponCodes };
     quotePromise = fetchCartJson(ORDER_QUOTE_API, payload).then((quote) => {
         if (seq !== quoteSequence) return false;
         currentQuote = quote;
@@ -1514,6 +1604,7 @@ function refreshQuote() {
         if (seq === quoteSequence) {
             currentQuote = null;
             resetTotals();
+            setCartText("cartCouponFeedback", couponCodes.length ? error.message : "تعذر حساب العروض تلقائيًا.");
             showCartError(`${error.message} — راجع محتويات السلة أو جرّب لاحقًا.`);
         }
         return false;
@@ -1577,6 +1668,7 @@ cartElement("checkoutForm")?.addEventListener("submit", async (event) => {
         if (!quoteOk || !currentQuote) return;
         const data = await fetchCartJson(ORDERS_API, {
             items: serverCartItems(),
+            coupon_code: cartCouponCodes(),
             customer_name: name,
             customer_phone: phone,
             fulfillment_type: delivery ? "delivery" : "pickup",
@@ -1586,6 +1678,8 @@ cartElement("checkoutForm")?.addEventListener("submit", async (event) => {
             notes: String(cartElement("orderNotes")?.value || "").trim()
         });
         lastOrderToken = data.tracking_token || null;
+        toggleCartElement("enableOrderNotifications", Boolean(lastOrderToken));
+        setCartText("orderNotificationsFeedback", "");
         // Keep a safe local list so the customer can revisit more than one order.
         saveMyOrder({ tracking_token: lastOrderToken, order_code: data.order_code });
         toggleCartElement("cartManageOrderButton", Boolean(lastOrderToken));
@@ -1734,7 +1828,7 @@ function showMyOrderDetails(bundle) {
     setCartText("myOrdersStatus", order.status_label || order.status || "—");
     setCartText("myOrdersFulfillment", order.fulfillment_type === "delivery" ? "توصيل" : "استلام من المحمصة");
     setCartText("myOrdersSubtotal", amountLabel(order.subtotal));
-    setCartText("myOrdersDiscount", `− ${amountLabel(order.discount_amount)}`);
+    setCartText("myOrdersDiscount", `− ${amountLabel(Number(order.discount_amount || 0) + Number(order.coupon_discount_amount || 0))}`);
     setCartText("myOrdersDeliveryFee", amountLabel(order.delivery_fee));
     setCartText("myOrdersTotal", amountLabel(order.total));
     const itemsNode = cartElement("myOrdersItems");

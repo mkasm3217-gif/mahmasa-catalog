@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="كتالوج منتجات المحمصة">
     <title>المحمصة</title>
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=12">
     <!-- PWA -->
     <meta name="theme-color" content="#2F211A">
     <meta name="application-name" content="محمصة كراميش">
@@ -201,6 +201,11 @@ PRODUCTS
                             <textarea id="orderNotes" name="notes" maxlength="1000" rows="2"
                                 placeholder="أي تفاصيل تساعد المحمصة في تجهيز الطلب"></textarea>
                         </div>
+                        <div class="cart-field coupon-field">
+                            <strong class="cart-field-label">العروض والكوبونات</strong>
+                            <small>تُطبّق تلقائيًا على المنتجات المشمولة بالسلة. كوبون المنتج له الأولوية، والكوبون الشامل ينطبق على بقية المنتجات حسب شروط العرض.</small>
+                            <small id="cartCouponFeedback" aria-live="polite"></small>
+                        </div>
                         <div class="cart-summary" id="cartOrderSummary" aria-live="polite">
                             <div><span>مجموع المنتجات</span><strong id="cartSubtotal">—</strong></div>
                             <div id="cartDiscountRow" class="hidden">
@@ -228,6 +233,10 @@ PRODUCTS
                     <button type="button" id="cartTrackButton" class="cart-track-button">
                         متابعة حالة الطلب
                     </button>
+                    <button type="button" id="enableOrderNotifications" class="cart-track-button hidden">
+                        🔔 فعّل إشعارات حالة طلبك
+                    </button>
+                    <p id="orderNotificationsFeedback" aria-live="polite"></p>
                     <p id="cartTrackingStatus" aria-live="polite"></p>
                     <button type="button" id="cartManageOrderButton" class="cart-track-button hidden"
                         aria-controls="myOrdersDialog" aria-haspopup="dialog">
@@ -603,6 +612,7 @@ PWA INSTALL UI
             <path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3" />
         </svg>
     </button>
-    <script src="script.js?v=9"></script>
+    <script src="script.js?v=13"></script>
+    <script src="customer-features.js?v=1"></script>
 </body>
 </html>

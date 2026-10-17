@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة إدارة المحمصة</title>
-    <link rel="stylesheet" href="admin.css?v=7">
+    <link rel="stylesheet" href="admin.css?v=12">
 <style>
 .logout-button { width: 100%; font-family: inherit; cursor: pointer; background: transparent; margin-top: 8px; }
 </style>
@@ -2141,7 +2141,10 @@ function renderAdminOrders() {
             </div>
             <div class="order-card-footer">
                 <strong>${formatPrice(order.total)} ل.س</strong>
-                <button class="primary-button" type="button" data-open-order="${Number(order.id)}">عرض التفاصيل</button>
+                <div class="order-card-actions">
+                    <button class="primary-button" type="button" data-open-order="${Number(order.id)}">عرض التفاصيل</button>
+                    <button class="order-delete-button" type="button" data-delete-order="${Number(order.id)}" data-order-code="${escapeHtml(order.order_code || order.id)}">حذف الطلب</button>
+                </div>
             </div>`;
         ordersList.appendChild(card);
     });
@@ -2151,9 +2154,28 @@ document.getElementById("refreshOrdersButton").addEventListener("click", loadAdm
 document.querySelector('[data-page="orders"]').addEventListener("click", loadAdminOrders);
 document.querySelector('[data-page="commerce"]').addEventListener("click", loadCommerceSettingsAdmin);
 ordersList.addEventListener("click", (event) => {
+    const deleteTarget = event.target.closest("[data-delete-order]");
+    if (deleteTarget) {
+        deleteAdminOrder(Number(deleteTarget.dataset.deleteOrder), deleteTarget.dataset.orderCode || "");
+        return;
+    }
     const target = event.target.closest("[data-open-order]");
     if (target) openOrderDetails(Number(target.dataset.openOrder));
 });
+async function deleteAdminOrder(id, orderCode) {
+    if (!Number.isInteger(id) || id <= 0) return;
+    if (!confirm(`حذف الطلب ${orderCode} نهائيًا؟ يمكن حذف الطلب المعلّق أو المرفوض أو الملغى فقط.`)) return;
+    ordersFeedback.textContent = "جارٍ حذف الطلب...";
+    try {
+        const response = await adminFetch(`${ADMIN_ORDERS_API}/${id}`, { method: "DELETE" });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || "تعذر حذف الطلب");
+        await loadAdminOrders();
+        ordersFeedback.textContent = data.message || "تم حذف الطلب";
+    } catch (error) {
+        ordersFeedback.textContent = error.message || "تعذر حذف الطلب";
+    }
+}
 function orderMapsUrl(order) {
     const lat = order.delivery_lat === null || order.delivery_lat === undefined || order.delivery_lat === "" ? NaN : Number(order.delivery_lat);
     const lng = order.delivery_lng === null || order.delivery_lng === undefined || order.delivery_lng === "" ? NaN : Number(order.delivery_lng);
@@ -2215,6 +2237,7 @@ async function openOrderDetails(id) {
             <div class="order-totals">
                 <p><span>قيمة المنتجات</span><strong>${formatPrice(order.subtotal)} ل.س</strong></p>
                 <p><span>خصم (${formatPrice(order.discount_percent)}%)</span><strong>− ${formatPrice(order.discount_amount)} ل.س</strong></p>
+                ${Number(order.coupon_discount_amount || 0) > 0 ? `<p><span>كوبون ${escapeHtml(order.coupon_code || "")}</span><strong>− ${formatPrice(order.coupon_discount_amount)} ل.س</strong></p>` : ""}
                 <p><span>رسوم التوصيل</span><strong>${formatPrice(order.delivery_fee)} ل.س</strong></p>
                 <p class="order-total-final"><span>الإجمالي</span><strong>${formatPrice(order.total)} ل.س</strong></p>
             </div>
@@ -2276,5 +2299,6 @@ document.addEventListener("keydown", (event) => {
 });
 initializeAdmin();
 </script>
+<script src="/admin-features.js?v=7"></script>
 </body>
 </html>

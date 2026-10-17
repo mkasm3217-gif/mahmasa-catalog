@@ -169,6 +169,45 @@ nav {
     background: transparent;
     cursor: pointer;
 }
+
+/* Add-on administration panels */
+.feature-tools-page { gap: 16px; }
+.feature-panel { margin-bottom: 16px; padding: 18px; }
+.feature-inline, .feature-form-grid { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; padding: 8px 0; }
+.feature-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); }
+.feature-inline label, .feature-form-grid label { display: grid; gap: 6px; min-width: 150px; color: #5d5045; font-size: 13px; }
+.feature-form-grid label small { color: #76695f; font-size: 11px; line-height: 1.5; }
+.feature-inline input, .feature-inline textarea, .feature-form-grid input, .feature-form-grid select {
+    min-height: 40px; border: 1px solid #ded4c9; border-radius: 9px; padding: 8px 10px;
+    color: #2f211a; background: #fff; font: inherit; width: 100%;
+}
+.feature-form-grid select[multiple] { min-height: 120px; }
+.feature-inline textarea { resize: vertical; min-height: 84px; }
+.feature-inline button, .feature-form-grid button, .feature-table-wrap button, .feature-wa-links a {
+    border: 0; border-radius: 9px; background: #2f211a; color: #fff; padding: 10px 14px;
+    cursor: pointer; font: inherit; text-decoration: none; display: inline-flex; justify-content: center;
+}
+.feature-wide { flex: 1 1 100%; }
+.feature-check { display: flex !important; align-items: center; gap: 8px !important; }
+.feature-check input { width: auto !important; min-height: auto !important; }
+.feature-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+.feature-stat { display: grid; gap: 8px; padding: 14px; border-radius: 10px; background: #f7f3ef; color: #68594c; }
+.feature-stat strong { color: #2f211a; font-size: 17px; }
+.feature-table-wrap { overflow-x: auto; margin-top: 12px; }
+.feature-table-wrap table { width: 100%; border-collapse: collapse; min-width: 520px; }
+.feature-table-wrap th, .feature-table-wrap td { padding: 10px; border-bottom: 1px solid #eee7e0; text-align: right; vertical-align: middle; }
+.feature-table-wrap input { width: 130px; border: 1px solid #ded4c9; border-radius: 8px; padding: 8px; font: inherit; }
+.feature-feedback, .feature-note { color: #69594c; font-size: 13px; line-height: 1.7; }
+.feature-push { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0 0; border-top: 1px solid #eee7e0; }
+.feature-push p, .feature-whatsapp-actions p { margin: 5px 0; color: #706357; font-size: 13px; }
+.feature-wa-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.feature-wa-links a { background: #147e4a; }
+.feature-whatsapp-actions { margin-top: 16px; padding: 14px; border-radius: 12px; background: #f6f2ed; }
+@media (max-width: 640px) {
+    .feature-panel { padding: 13px; }
+    .feature-inline { align-items: stretch; }
+    .feature-inline label, .feature-inline button { width: 100%; }
+}
 /* =========================
    MAIN
 ========================= */
@@ -1395,6 +1434,26 @@ textarea:focus {
     min-height: 37px;
     font-size: 11px;
 }
+.order-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.order-delete-button {
+    min-height: 37px;
+    padding: 8px 13px;
+    border: 1px solid #B97870;
+    border-radius: 10px;
+    background: #FFF7F5;
+    color: #8A352D;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+}
+.order-delete-button:hover {
+    background: #F7E5E1;
+}
 /* Orders detail modal */
 #orderDetailsModal .order-modal-box {
     width: min(790px, 100%);
@@ -1610,6 +1669,71 @@ textarea:focus {
 .sale-config-fields .form-group { min-width: 0; }
 .sale-config-fields .field-hint { margin-bottom: 10px; }
 .sale-config-fields .commerce-switch { margin-top: 9px; }
+
+/* Coupon setup: stable columns on desktop and a readable single-column form on phones. */
+.coupon-admin-panel .card-header { margin-bottom: 12px; }
+.coupon-admin-panel .card-header p { max-width: 760px; line-height: 1.8; }
+.coupon-form-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 14px;
+    padding: 14px;
+    border: 1px solid #eadfce;
+    border-radius: 14px;
+    background: #fcfaf6;
+}
+.coupon-form-grid label { min-width: 0; align-content: start; gap: 7px; line-height: 1.55; }
+.coupon-form-grid input,
+.coupon-form-grid select {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 44px;
+    border-color: #d8c8b2;
+    background: #fff;
+}
+.coupon-form-grid input:focus,
+.coupon-form-grid select:focus {
+    outline: none;
+    border-color: #b48a2b;
+    box-shadow: 0 0 0 3px rgba(208, 164, 45, .16);
+}
+.coupon-form-grid .coupon-code-admin { direction: ltr; text-align: left; font-weight: 800; letter-spacing: .04em; }
+.coupon-form-grid .coupon-products-field { grid-column: 1 / -1; }
+.coupon-form-grid select[multiple] {
+    min-height: 150px;
+    padding: 8px;
+    line-height: 1.7;
+}
+.coupon-form-grid select[multiple] option { padding: 5px 8px; }
+.coupon-form-grid label small { min-height: 1.5em; }
+.coupon-form-grid .coupon-submit { justify-self: start; min-height: 43px; margin-top: 2px; }
+.coupon-list-wrap { margin-top: 16px; border: 1px solid #e9dfd2; border-radius: 12px; }
+.coupon-admin-table { min-width: 900px !important; }
+.coupon-admin-table th { background: #f5eee4; color: #503a29; font-size: 12px; white-space: nowrap; }
+.coupon-admin-table td { color: #504437; font-size: 12px; line-height: 1.6; }
+.coupon-admin-table tbody tr:hover { background: #fdfaf4; }
+.coupon-admin-table .coupon-code-label { display: inline-block; color: #49351f; font-size: 13px; letter-spacing: .04em; }
+.coupon-title-label { display: block; margin-top: 3px; color: #76695f; font-size: 11px; }
+.coupon-toggle-button.is-active { background: #875c20; }
+.coupon-toggle-button.is-paused { background: #38664a; }
+.coupon-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.coupon-admin-table .coupon-actions button { min-width: 64px; margin: 0; padding: 8px 10px; font-size: 11px; }
+.coupon-admin-table .coupon-actions .coupon-delete-button { background: #a33c32; }
+.coupon-admin-table .coupon-actions .coupon-delete-button:hover { background: #812c25; }
+.coupon-delete-note { margin-top: 5px; color: #8a4a35 !important; font-size: 11px !important; }
+.coupon-empty-state { display: grid; gap: 5px; padding: 18px; color: #655342; }
+.coupon-empty-state span { color: #85776a; font-size: 12px; }
+@media (max-width: 900px) {
+    .coupon-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+    .coupon-admin-panel { padding: 12px; }
+    .coupon-form-grid { grid-template-columns: minmax(0, 1fr); gap: 11px; padding: 11px; }
+    .coupon-form-grid .coupon-products-field { grid-column: auto; }
+    .coupon-form-grid .coupon-submit { width: 100%; }
+    .coupon-form-grid select[multiple] { min-height: 128px; }
+    .coupon-list-wrap { margin-inline: -2px; }
+}
 @media (max-width: 1050px) {
     .orders-list { grid-template-columns: 1fr; }
     #ordersPage .order-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1628,7 +1752,9 @@ textarea:focus {
     .order-customer { font-size: 11px; }
     .order-card-facts span { font-size: 9px; }
     .order-card-footer > strong { font-size: 13px; }
-    .order-card-footer .primary-button { width: 100%; }
+    .order-card-actions { width: 100%; }
+    .order-card-actions .primary-button,
+    .order-card-actions .order-delete-button { flex: 1 1 120px; }
     #orderDetailsModal .order-modal-box { width: 100%; max-height: 94vh; }
     .order-details-body { padding: 12px; gap: 12px; }
     .order-detail-grid { grid-template-columns: 1fr; gap: 7px; }

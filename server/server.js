@@ -41,6 +41,9 @@ const { v2: cloudinary } = require("cloudinary");
 
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const webpush = require("web-push");
+const { createFeatures } = require("./features");
+const { calculateCouponDiscount, allocateCouponProductLines } = require("./feature-utils");
 
 
 
@@ -519,7 +522,11 @@ function loadAivenDatabaseSsl() {
     };
 }
 
-const AIVEN_DATABASE_SSL = loadAivenDatabaseSsl();
+// Local development may connect only to loopback without TLS. Every remote database,
+// including Aiven, must present a valid CA certificate and is verified.
+const databaseHost = String(process.env.DB_HOST || "").trim().toLowerCase();
+const isLoopbackDatabase = ["localhost", "127.0.0.1", "::1"].includes(databaseHost);
+const DATABASE_SSL = isLoopbackDatabase ? undefined : loadAivenDatabaseSsl();
 
 const db = mysql.createConnection({
 
@@ -545,7 +552,7 @@ const db = mysql.createConnection({
 
 
 
-    ssl: AIVEN_DATABASE_SSL
+    ssl: DATABASE_SSL
 
 
 
@@ -564,8 +571,11 @@ const commercePool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 5,
     queueLimit: 0,
-    ssl: AIVEN_DATABASE_SSL
+    ssl: DATABASE_SSL
 }).promise();
+
+// Routes are registered after the admin session middleware below.
+let orderFeatureServices;
 
 // نخزّن جلسات الإدارة في MySQL بدل MemoryStore الافتراضي غير المناسب للإنتاج.
 // نستخدم نفس pool الذي يحتوي إعداد SSL لاتصال Aiven. المكتبة لا تنقل خيار SSL
@@ -593,6 +603,14 @@ app.use(session({
         maxAge: 1000 * 60 * 60 * 8
     }
 }));
+
+// Add-on routes live in a separate module; existing catalog and order APIs stay in place.
+orderFeatureServices = createFeatures(app, {
+    dbp,
+    pool: commercePool,
+    requireAdmin,
+    webpush
+});
 
 
 
@@ -643,6 +661,30 @@ app.get("/admin.html", (req, res) => {
 // The admin page uses admin.css?v=7; an exact file route also serves the query URL.
 app.get("/admin.css", (_req, res) => {
     return res.sendFile(path.join(ADMIN_FRONTEND_DIR, "admin.css"));
+});
+
+app.get("/admin-features.js", requireAdmin, (_req, res) => {
+    res.set("Cache-Control", "no-store");
+    return res.sendFile(path.join(ADMIN_FRONTEND_DIR, "admin-features.js"));
+});
+
+app.get("/claim.html", (_req, res) => {
+    res.set("Cache-Control", "no-store");
+    return res.sendFile(path.join(ADMIN_FRONTEND_DIR, "claim.html"));
+});
+
+// Admin push needs a service worker on this same origin as the admin session.
+app.get("/service-worker.js", (_req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.set("Service-Worker-Allowed", "/");
+    return res.sendFile(path.resolve(ADMIN_FRONTEND_DIR, "service-worker.js"));
+});
+
+app.get("/icons/:name", (req, res) => {
+    const allowed = new Set(["icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png", "favicon-32.png"]);
+    if (!allowed.has(req.params.name)) return res.sendStatus(404);
+    res.set("Cache-Control", "public, max-age=86400");
+    return res.sendFile(path.join(ADMIN_FRONTEND_DIR, "icons", req.params.name));
 });
 
 // The login/admin pages link to index.html to return to the customer catalog.
@@ -4855,7 +4897,7 @@ async function loadCommerceSettings() {
     };
 }
 
-async function calculateOrderQuote(rawItems, fulfillmentType = "pickup") {
+async function calculateOrderQuote(rawItems, fulfillmentType = "pickup", couponCodeInput = "") {
     const items = Array.isArray(rawItems) ? rawItems : [];
 
     if (!items.length || items.length > 50) {
@@ -4890,7 +4932,7 @@ async function calculateOrderQuote(rawItems, fulfillmentType = "pickup") {
     const placeholders = uniqueIds.map(() => "?").join(",");
 
     const [products] = await dbp.query(
-        `SELECT id, name, price, image, sale_type, unit_label,
+        `SELECT id, name, price, image, cost_price, sale_type, unit_label,
                 min_weight_grams, weight_step_grams,
                 allow_amount_order, is_orderable
          FROM products
@@ -4922,6 +4964,7 @@ async function calculateOrderQuote(rawItems, fulfillmentType = "pickup") {
 
         const saleType = product.sale_type === "weight" ? "weight" : "unit";
         const unitPrice = Number(product.price || 0);
+        const unitCost = Number(product.cost_price || 0);
 
         if (!Number.isFinite(unitPrice) || unitPrice < 0) {
             const error = new Error(`سعر المنتج «${product.name}» غير صحيح`);
@@ -5020,6 +5063,7 @@ async function calculateOrderQuote(rawItems, fulfillmentType = "pickup") {
             selection_mode: selectionMode,
             unit_label: product.unit_label || (saleType === "weight" ? "كغ" : "قطعة"),
             unit_price: unitPrice,
+            unit_cost: Number.isFinite(unitCost) && unitCost >= 0 ? unitCost : 0,
             quantity,
             weight_grams: weightGrams,
             requested_amount: requestedAmount,
@@ -5034,9 +5078,73 @@ async function calculateOrderQuote(rawItems, fulfillmentType = "pickup") {
     const discountEligible = settings.discount_percent > 0 && subtotal >= discountMinimum;
     const discountPercent = discountEligible ? settings.discount_percent : 0;
     const discountAmount = roundMoney(subtotal * discountPercent / 100);
+    const couponCodes = (Array.isArray(couponCodeInput) ? couponCodeInput : String(couponCodeInput || "").split(/[\u060C,;\n]+/))
+        .map((value) => String(value || "").trim().toUpperCase().slice(0, 40))
+        .filter(Boolean)
+        .filter((value, index, all) => all.indexOf(value) === index);
+    if (couponCodes.length > 5) {
+        const error = new Error("يمكن تطبيق خمسة كوبونات كحد أقصى في الطلب");
+        error.status = 400;
+        throw error;
+    }
+    let coupons = [];
+    let couponDiscountAmount = 0;
+    const couponDiscounts = [];
+    if (couponCodes.length) {
+        const placeholders = couponCodes.map(() => "?").join(",");
+        const [couponRows] = await dbp.query(
+            `SELECT id, code, title, discount_type, discount_value, product_scope, minimum_subtotal,
+                    starts_at, ends_at, usage_limit, usage_count
+             FROM coupons WHERE code IN (${placeholders}) AND active = 1`,
+            couponCodes
+        );
+        const couponByCode = new Map(couponRows.map((row) => [String(row.code).toUpperCase(), row]));
+        coupons = couponCodes.map((code) => couponByCode.get(code));
+        const invalidCode = couponCodes.find((code, index) => !coupons[index]);
+        if (invalidCode) {
+            const error = new Error(`رمز الكوبون ${invalidCode} غير صالح أو غير فعال`);
+            error.status = 400;
+            throw error;
+        }
+        const couponIds = coupons.map((coupon) => Number(coupon.id));
+        const rulePlaceholders = couponIds.map(() => "?").join(",");
+        const [couponRules] = await dbp.query(`SELECT coupon_id, product_id FROM coupon_products WHERE coupon_id IN (${rulePlaceholders})`, couponIds);
+        const productIdsByCoupon = new Map(couponIds.map((id) => [id, []]));
+        couponRules.forEach((rule) => productIdsByCoupon.get(Number(rule.coupon_id))?.push(Number(rule.product_id)));
+        coupons.forEach((coupon) => { coupon.product_ids = productIdsByCoupon.get(Number(coupon.id)) || []; });
+        const now = Date.now();
+        for (const coupon of coupons) {
+            if ((coupon.starts_at && new Date(coupon.starts_at).getTime() > now) ||
+                (coupon.ends_at && new Date(coupon.ends_at).getTime() < now) ||
+                (coupon.usage_limit !== null && Number(coupon.usage_count) >= Number(coupon.usage_limit))) {
+                const error = new Error(`انتهت صلاحية العرض ${coupon.code} أو اكتمل عدد استخداماته`);
+                error.status = 400;
+                throw error;
+            }
+            if (subtotal < Number(coupon.minimum_subtotal || 0)) {
+                const error = new Error(`الحد الأدنى لاستخدام ${coupon.code} هو ${roundMoney(coupon.minimum_subtotal).toLocaleString("en-US")} ل.س`);
+                error.status = 400;
+                throw error;
+            }
+        }
+
+        const applyCouponToLines = (coupon, couponLines) => {
+            const eligibleSubtotal = roundMoney(couponLines.reduce((sum, line) => sum + Number(line.line_total || 0), 0));
+            const eligibleGeneralDiscount = discountPercent > 0
+                ? roundMoney(eligibleSubtotal * discountPercent / 100)
+                : 0;
+            const amount = calculateCouponDiscount(eligibleSubtotal, eligibleGeneralDiscount, coupon.discount_type, coupon.discount_value);
+            couponDiscountAmount += amount;
+            couponDiscounts.push({ id: Number(coupon.id), code: coupon.code, title: coupon.title, discount_amount: amount });
+        };
+
+        for (const allocation of allocateCouponProductLines(coupons, lines)) {
+            applyCouponToLines(allocation.coupon, allocation.lines);
+        }
+    }
     // أجرة التوصيل تُضاف بعد حساب الخصم، ولا تُخصم منها أي نسبة.
     const deliveryFee = fulfillmentType === "delivery" ? settings.delivery_fee : 0;
-    const totalAfterDiscount = Math.max(0, roundMoney(subtotal - discountAmount));
+    const totalAfterDiscount = Math.max(0, roundMoney(subtotal - discountAmount - couponDiscountAmount));
     const finalTotal = Math.max(0, roundMoney(totalAfterDiscount + deliveryFee));
 
     return {
@@ -5047,6 +5155,14 @@ async function calculateOrderQuote(rawItems, fulfillmentType = "pickup") {
         discount_eligible: discountEligible,
         discount_remaining: Math.max(0, roundMoney(discountMinimum - subtotal)),
         discount_amount: discountAmount,
+        coupon_ids: couponDiscounts.map((coupon) => coupon.id),
+        coupon_codes: couponDiscounts.map((coupon) => coupon.code),
+        coupon_titles: couponDiscounts.map((coupon) => coupon.title),
+        coupon_discounts: couponDiscounts,
+        coupon_id: couponDiscounts[0]?.id || null,
+        coupon_code: couponDiscounts.map((coupon) => coupon.code).join(", ") || null,
+        coupon_title: couponDiscounts.map((coupon) => coupon.title).join(" + ") || null,
+        coupon_discount_amount: couponDiscountAmount,
         total_after_discount: totalAfterDiscount,
         delivery_fee: deliveryFee,
         total: finalTotal
@@ -5196,7 +5312,7 @@ app.post("/api/orders/quote", quoteRateLimit, async (req, res) => {
     const fulfillmentType = req.body.fulfillment_type === "delivery" ? "delivery" : "pickup";
 
     try {
-        const quote = await calculateOrderQuote(req.body.items, fulfillmentType);
+        const quote = await calculateOrderQuote(req.body.items, fulfillmentType, req.body.coupon_code);
         res.json(quote);
     } catch (error) {
         console.error(error);
@@ -5243,9 +5359,10 @@ app.post("/api/orders", createOrderRateLimit, async (req, res) => {
         }
     }
 
+    let orderId;
     try {
         // لا نثق بأي سعر قادم من المتصفح. كل الأسعار والحسم يعاد حسابها من قاعدة البيانات.
-        const quote = await calculateOrderQuote(req.body.items, fulfillmentType);
+        const quote = await calculateOrderQuote(req.body.items, fulfillmentType, req.body.coupon_code);
         const orderCode = generateOrderCode();
         const trackingToken = crypto.randomUUID();
         const connection = await commercePool.getConnection();
@@ -5253,13 +5370,34 @@ app.post("/api/orders", createOrderRateLimit, async (req, res) => {
         try {
             await connection.beginTransaction();
 
+            const couponDiscounts = quote.coupon_discounts || [];
+            if (couponDiscounts.length) {
+                const couponIds = couponDiscounts.map((coupon) => coupon.id);
+                const couponPlaceholders = couponIds.map(() => "?").join(",");
+                const [lockedCoupons] = await connection.query(
+                    `SELECT id, usage_limit, usage_count, active FROM coupons WHERE id IN (${couponPlaceholders}) FOR UPDATE`,
+                    couponIds
+                );
+                const lockedById = new Map(lockedCoupons.map((coupon) => [Number(coupon.id), coupon]));
+                const isInvalid = couponDiscounts.some(({ id }) => {
+                    const lockedCoupon = lockedById.get(Number(id));
+                    return !lockedCoupon || Number(lockedCoupon.active) !== 1 ||
+                        (lockedCoupon.usage_limit !== null && Number(lockedCoupon.usage_count) >= Number(lockedCoupon.usage_limit));
+                });
+                if (isInvalid) {
+                    const couponError = new Error("اكتمل عدد استخدامات هذا العرض؛ أزل الكوبون وأعد حساب الطلب");
+                    couponError.status = 409;
+                    throw couponError;
+                }
+            }
+
             const [orderResult] = await connection.query(
                 `INSERT INTO orders
                 (order_code, tracking_token, customer_name, customer_phone,
                  fulfillment_type, delivery_address, delivery_lat, delivery_lng,
                  notes, payment_method, status, subtotal, discount_percent,
-                 discount_amount, delivery_fee, total)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'cash', 'pending', ?, ?, ?, ?, ?)`,
+                 discount_amount, coupon_code, coupon_discount_amount, delivery_fee, total)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'cash', 'pending', ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     orderCode,
                     trackingToken,
@@ -5273,20 +5411,22 @@ app.post("/api/orders", createOrderRateLimit, async (req, res) => {
                     quote.subtotal,
                     quote.discount_percent,
                     quote.discount_amount,
+                    quote.coupon_code,
+                    quote.coupon_discount_amount,
                     quote.delivery_fee,
                     quote.total
                 ]
             );
 
-            const orderId = orderResult.insertId;
+            orderId = orderResult.insertId;
 
             for (const line of quote.items) {
                 await connection.query(
                     `INSERT INTO order_items
                     (order_id, product_id, product_name, product_image,
-                     sale_type, selection_mode, unit_label, unit_price,
+                     sale_type, selection_mode, unit_label, unit_price, unit_cost,
                      quantity, weight_grams, requested_amount, item_note, line_total)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         orderId,
                         line.product_id,
@@ -5296,6 +5436,7 @@ app.post("/api/orders", createOrderRateLimit, async (req, res) => {
                         line.selection_mode,
                         line.unit_label,
                         line.unit_price,
+                        line.unit_cost,
                         line.quantity,
                         line.weight_grams,
                         line.requested_amount,
@@ -5311,6 +5452,14 @@ app.post("/api/orders", createOrderRateLimit, async (req, res) => {
                 [orderId]
             );
 
+            for (const coupon of quote.coupon_discounts || []) {
+                await connection.query("UPDATE coupons SET usage_count = usage_count + 1 WHERE id = ?", [coupon.id]);
+                await connection.query(
+                    "INSERT INTO coupon_redemptions (coupon_id, order_id, phone, discount_amount) VALUES (?, ?, ?, ?)",
+                    [coupon.id, orderId, customerPhone, coupon.discount_amount]
+                );
+            }
+
             await connection.commit();
         } catch (error) {
             await connection.rollback();
@@ -5318,6 +5467,12 @@ app.post("/api/orders", createOrderRateLimit, async (req, res) => {
         } finally {
             connection.release();
         }
+
+        // Notifications are best-effort side effects after commit. A push service outage
+        // must never turn a successfully-created customer order into an error.
+        void orderFeatureServices.onOrderCreated(orderId).catch((featureError) => {
+            console.error("Order-created add-on failed:", featureError.message);
+        });
 
         res.status(201).json({
             message: "تم إرسال الطلب للمحمصة",
@@ -5335,9 +5490,13 @@ app.post("/api/orders", createOrderRateLimit, async (req, res) => {
             total: quote.total
         });
     } catch (error) {
-        console.error(error);
+        console.error("[POST /api/orders]", error.code || "SERVER_ERROR", error.sqlMessage || error.message);
         res.status(error.status || 500).json({
-            message: error.status ? error.message : "تعذر إنشاء الطلب، حاول مرة أخرى"
+            message: error.status
+                ? error.message
+                : process.env.NODE_ENV === "development"
+                    ? `تعذر إنشاء الطلب (${error.code || "SERVER_ERROR"})؛ راجع Terminal في VS Code`
+                    : "تعذر إنشاء الطلب، حاول مرة أخرى"
         });
     }
 });
@@ -5429,6 +5588,15 @@ function validOrderTrackingToken(value) {
     );
 }
 
+async function releaseOrderCoupons(connection, orderId) {
+    const [redemptions] = await connection.query("SELECT coupon_id FROM coupon_redemptions WHERE order_id = ? FOR UPDATE", [orderId]);
+    if (!redemptions.length) return;
+    await connection.query("DELETE FROM coupon_redemptions WHERE order_id = ?", [orderId]);
+    for (const redemption of redemptions) {
+        await connection.query("UPDATE coupons SET usage_count = GREATEST(usage_count - 1, 0) WHERE id = ?", [redemption.coupon_id]);
+    }
+}
+
 app.put("/api/orders/track/:token/items", async (req, res) => {
     const token = String(req.params.token || "").trim();
     if (!validOrderTrackingToken(token)) {
@@ -5446,7 +5614,7 @@ app.put("/api/orders/track/:token/items", async (req, res) => {
         await connection.beginTransaction();
         // قفل الصف يمنع قبول الطلب في الوقت نفسه الذي يغيّره فيه الزبون.
         const [rows] = await connection.query(
-            "SELECT id, status, fulfillment_type FROM orders WHERE tracking_token = ? FOR UPDATE",
+            "SELECT id, status, fulfillment_type, coupon_code FROM orders WHERE tracking_token = ? FOR UPDATE",
             [token]
         );
         if (!rows.length) {
@@ -5468,19 +5636,23 @@ app.put("/api/orders/track/:token/items", async (req, res) => {
             await connection.query(
                 `INSERT INTO order_items
                  (order_id, product_id, product_name, product_image,
-                  sale_type, selection_mode, unit_label, unit_price,
+                  sale_type, selection_mode, unit_label, unit_price, unit_cost,
                   quantity, weight_grams, requested_amount, item_note, line_total)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     order.id, line.product_id, line.product_name, line.product_image,
-                    line.sale_type, line.selection_mode, line.unit_label, line.unit_price,
+                    line.sale_type, line.selection_mode, line.unit_label, line.unit_price, line.unit_cost,
                     line.quantity, line.weight_grams, line.requested_amount,
                     line.item_note, line.line_total
                 ]
             );
         }
+        if (order.coupon_code) {
+            await releaseOrderCoupons(connection, order.id);
+        }
         await connection.query(
             `UPDATE orders SET subtotal = ?, discount_percent = ?, discount_amount = ?,
+                 coupon_code = NULL, coupon_discount_amount = 0,
                  delivery_fee = ?, total = ? WHERE id = ?`,
             [
                 quote.subtotal, quote.discount_percent, quote.discount_amount,
@@ -5519,7 +5691,7 @@ app.post("/api/orders/track/:token/cancel", async (req, res) => {
         connection = await commercePool.getConnection();
         await connection.beginTransaction();
         const [rows] = await connection.query(
-            "SELECT id, status FROM orders WHERE tracking_token = ? FOR UPDATE",
+            "SELECT id, status, coupon_code FROM orders WHERE tracking_token = ? FOR UPDATE",
             [token]
         );
         if (!rows.length) {
@@ -5539,6 +5711,9 @@ app.post("/api/orders/track/:token/cancel", async (req, res) => {
              VALUES (?, 'cancelled', 'ألغى الزبون الطلب قبل الموافقة')`,
             [rows[0].id]
         );
+        if (rows[0].coupon_code) {
+            await releaseOrderCoupons(connection, rows[0].id);
+        }
         await connection.commit();
         res.set("Cache-Control", "no-store");
         res.json({ message: "تم إلغاء طلبك", status: "cancelled", status_label: "ألغاه الزبون" });
@@ -5597,6 +5772,58 @@ app.get("/api/admin/orders", requireAdmin, async (req, res) => {
     }
 });
 
+app.delete("/api/admin/orders/:id", requireAdmin, async (req, res) => {
+    const orderId = Number(req.params.id);
+    if (!Number.isInteger(orderId) || orderId <= 0) {
+        return res.status(400).json({ message: "رقم الطلب غير صحيح" });
+    }
+
+    let connection;
+    try {
+        connection = await commercePool.getConnection();
+        await connection.beginTransaction();
+        const [rows] = await connection.query(
+            "SELECT id, order_code, status FROM orders WHERE id = ? FOR UPDATE",
+            [orderId]
+        );
+        if (!rows.length) {
+            await connection.rollback();
+            return res.status(404).json({ message: "الطلب غير موجود" });
+        }
+        const order = rows[0];
+        if (!["pending", "rejected", "cancelled"].includes(order.status)) {
+            await connection.rollback();
+            return res.status(409).json({
+                message: "يمكن حذف الطلبات المعلّقة أو المرفوضة أو الملغاة فقط؛ الطلب المقبول أو المكتمل محفوظ ضمن السجل"
+            });
+        }
+
+        // رجّع رصيد استخدام الكوبونات قبل حذف الطلب. العملية آمنة حتى لو سبق تحريرها.
+        await releaseOrderCoupons(connection, orderId);
+        const [loyaltyRows] = await connection.query(
+            "SELECT COUNT(*) AS entries FROM loyalty_ledger WHERE order_id = ?",
+            [orderId]
+        );
+        if (Number(loyaltyRows[0]?.entries || 0) > 0) {
+            await connection.rollback();
+            return res.status(409).json({
+                message: "لا يمكن حذف هذا الطلب لأنه مرتبط بحركة نقاط؛ احتفظ بسجله"
+            });
+        }
+        await connection.query("DELETE FROM orders WHERE id = ?", [orderId]);
+        await connection.commit();
+        res.json({ message: `تم حذف الطلب ${order.order_code || orderId}` });
+    } catch (error) {
+        if (connection) {
+            try { await connection.rollback(); } catch (rollbackError) { console.error(rollbackError); }
+        }
+        console.error("[DELETE /api/admin/orders/:id]", error);
+        res.status(500).json({ message: "تعذر حذف الطلب" });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
 app.get("/api/admin/orders/:id", requireAdmin, async (req, res) => {
     const orderId = Number(req.params.id);
 
@@ -5636,7 +5863,7 @@ app.patch("/api/admin/orders/:id/status", requireAdmin, async (req, res) => {
         await connection.beginTransaction();
         // نفس قفل التعديل والإلغاء: إجراء واحد فقط يفوز إذا حدثا معًا.
         const [rows] = await connection.query(
-            "SELECT id, status, fulfillment_type FROM orders WHERE id = ? FOR UPDATE",
+            "SELECT id, status, fulfillment_type, coupon_code FROM orders WHERE id = ? FOR UPDATE",
             [orderId]
         );
         if (!rows.length) {
@@ -5644,6 +5871,7 @@ app.patch("/api/admin/orders/:id/status", requireAdmin, async (req, res) => {
             return res.status(404).json({ message: "الطلب غير موجود" });
         }
         const order = rows[0];
+        const previousStatus = order.status;
         if (order.status === "cancelled") {
             await connection.rollback();
             return res.status(409).json({ message: "الزبون ألغى الطلب، ولا يمكن إعادة تفعيله" });
@@ -5678,6 +5906,11 @@ app.patch("/api/admin/orders/:id/status", requireAdmin, async (req, res) => {
             [orderId, nextStatus, adminNote || `تم تحديث الحالة إلى: ${orderStatusLabel(nextStatus)}`]
         );
         await connection.commit();
+        if (previousStatus !== nextStatus) {
+            void orderFeatureServices.onOrderStatusChanged(orderId, nextStatus).catch((featureError) => {
+                console.error("Order-status add-on failed:", featureError.message);
+            });
+        }
         res.json({ message: "تم تحديث حالة الطلب", status: nextStatus,
             status_label: orderStatusLabel(nextStatus) });
     } catch (error) {

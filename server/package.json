@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "generate:vapid": "node generate-vapid.js",
+    "test": "node --test",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +21,7 @@
     "express-session": "^1.19.0",
     "multer": "^2.4.0",
     "multer-storage-cloudinary": "^4.0.0",
-    "mysql2": "^3.24.5"
+    "mysql2": "^3.24.5",
+    "web-push": "^3.6.7"
   }
 }

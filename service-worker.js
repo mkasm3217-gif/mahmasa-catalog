@@ -3,13 +3,13 @@
  * الملفات العامة فقط تُخزّن للعمل دون اتصال.
  * طلبات API وصفحات الإدارة وتسجيل الدخول تبقى من الشبكة مباشرة.
  */
-const CACHE_NAME = "kramish-pwa-commerce-v2-20261009";
+const CACHE_NAME = "kramish-pwa-commerce-v6-auto-coupons";
 const CACHE_PREFIX = "kramish-pwa-";
 const APP_SHELL = [
     "./",
     "./index.html",
-    "./style.css?v=9",
-    "./script.js?v=9",
+    "./style.css?v=12",
+    "./script.js?v=13",
     "./manifest.webmanifest?v=1",
     "./icons/icon-192.png",
     "./icons/icon-512.png",
@@ -98,5 +98,34 @@ self.addEventListener("fetch", (event) => {
             if (cached) return cached;
             throw error;
         }
+    })());
+});
+
+self.addEventListener("push", (event) => {
+    let data = {};
+    try { data = event.data ? event.data.json() : {}; }
+    catch { data = { body: event.data?.text() || "لديك تحديث جديد" }; }
+    event.waitUntil(self.registration.showNotification(data.title || "محمصة كراميش", {
+        body: data.body || "لديك تحديث جديد.",
+        icon: "./icons/icon-192.png",
+        badge: "./icons/icon-192.png",
+        tag: data.tag || "kramish-update",
+        data: { url: data.url || "./" },
+        dir: "rtl",
+        lang: "ar"
+    }));
+});
+
+self.addEventListener("notificationclick", (event) => {
+    event.notification.close();
+    const target = new URL(event.notification.data?.url || "./", self.registration.scope).href;
+    event.waitUntil((async () => {
+        const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+        const existing = windows.find((client) => client.url.startsWith(self.registration.scope));
+        if (existing) {
+            await existing.navigate(target);
+            return existing.focus();
+        }
+        return self.clients.openWindow(target);
     })());
 });
