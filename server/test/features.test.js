@@ -3,6 +3,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const vm = require("node:vm");
 const { calculateCouponDiscount, couponIncludesProduct, allocateCouponProductLines } = require("../feature-utils");
 const { createFeatures } = require("../features");
 
@@ -82,6 +83,148 @@ test("database migration is additive and includes feature storage", () => {
     assert.match(migration, /MODIFY coupon_code VARCHAR\(255\)/i);
     assert.match(migration, /ADD COLUMN staff_claim_token CHAR\(36\)/i);
     assert.match(migration, /ALTER TABLE order_items[\s\S]*unit_cost/i);
+});
+
+test("coupon dates are entered and shown in Arabic year/month/day order", () => {
+    const adminScript = fs.readFileSync(path.join(__dirname, "..", "..", "admin-features.js"), "utf8");
+    assert.match(adminScript, /name="starts_at" type="text"[^>]*placeholder="سنة\/شهر\/يوم"/);
+    assert.match(adminScript, /name="ends_at" type="text"[^>]*placeholder="سنة\/شهر\/يوم"/);
+    assert.match(adminScript, /اكتب التاريخ بصيغة سنة\/شهر\/يوم/);
+    assert.match(adminScript, /return `\$\{year\}-\$\{month\}-\$\{day\}/);
+});
+
+function featureRouteHarness(dbp) {
+    const routes = new Map();
+    const app = new Proxy({}, { get: (_target, method) => (...args) => routes.set(`${method} ${args[0]}`, args.slice(1)) });
+    createFeatures(app, { dbp, pool: {}, requireAdmin: (_req, _res, next) => next(), webpush: null });
+    return routes;
+}
+
+function jsonResponse() {
+    return {
+        statusCode: 200,
+        headers: {},
+        status(code) { this.statusCode = code; return this; },
+        set(name, value) { this.headers[name] = value; return this; },
+        json(body) { this.body = body; return this; }
+    };
+}
+
+test("staff phone numbers survive MySQL JSON values returned as arrays", async () => {
+    const routes = featureRouteHarness({ query: async () => [[{ staff_whatsapp_numbers: ["963955501234"] }]] });
+    const handler = routes.get("get /api/admin/features/contacts").at(-1);
+    const response = jsonResponse();
+    await handler({}, response);
+    assert.deepEqual(response.body.numbers, ["963955501234"]);
+    assert.equal(response.headers["Cache-Control"], "no-store");
+});
+
+test("employee WhatsApp order links receive numbers stored in a MySQL JSON array", async () => {
+    const storedNumbers = ["963955501234", "963944401234"];
+    const dbp = { query: async (sql) => {
+        if (sql.startsWith("SELECT id, order_code")) return [[{
+            id: 8, order_code: "K-8", tracking_token: "tracking", customer_name: "Test", customer_phone: "963900000000",
+            fulfillment_type: "pickup", delivery_address: null, delivery_lat: null, delivery_lng: null,
+            status: "pending", total: 12500, delivery_fee: 0, staff_claim_token: "claim-token", staff_claimed_by: null
+        }]];
+        if (sql.startsWith("SELECT product_name")) return [[{ product_name: "قهوة", quantity: 1, weight_grams: null, unit_label: "حبة", line_total: 12500 }]];
+        if (sql.startsWith("SELECT staff_whatsapp_numbers")) return [[{ staff_whatsapp_numbers: storedNumbers }]];
+        throw new Error(`Unexpected SQL in WhatsApp route test: ${sql}`);
+    } };
+    const routes = featureRouteHarness(dbp);
+    const handler = routes.get("get /api/admin/features/orders/:id/whatsapp").at(-1);
+    const response = jsonResponse();
+    await handler({ params: { id: "8" }, protocol: "https", get: () => "mahmasa-catalog.onrender.com" }, response);
+    assert.deepEqual(response.body.numbers, storedNumbers);
+    assert.match(response.body.message, /طلب K-8/);
+    assert.equal(response.headers["Cache-Control"], "no-store");
+});
+
+test("admin can remove this device's push subscription", async () => {
+    let query;
+    const dbp = { query: async (...args) => { query = args; return [{ affectedRows: 1 }]; } };
+    const routes = featureRouteHarness(dbp);
+    const handler = routes.get("delete /api/admin/features/push-subscription").at(-1);
+    const response = jsonResponse();
+    await handler({ body: { endpoint: "https://push.example/device-123" } }, response);
+    const expectedHash = require("node:crypto").createHash("sha256").update("https://push.example/device-123").digest("hex");
+    assert.equal(response.statusCode, 200);
+    assert.match(query[0], /DELETE FROM admin_push_subscriptions/);
+    assert.equal(query[1][0], expectedHash);
+});
+
+test("a customer device subscription links to later orders without requesting permission again", async () => {
+    const source = fs.readFileSync(path.join(__dirname, "..", "..", "customer-features.js"), "utf8");
+    const calls = [];
+    let permissionRequests = 0;
+    let subscribeCalls = 0;
+    const subscription = {
+        endpoint: "https://push.example/customer-device",
+        toJSON: () => ({ endpoint: "https://push.example/customer-device", keys: { p256dh: "public", auth: "secret" } })
+    };
+    const registration = { pushManager: {
+        getSubscription: async () => subscription,
+        subscribe: async () => { subscribeCalls++; return subscription; }
+    } };
+    const elements = {
+        enableOrderNotifications: { disabled: false, textContent: "", addEventListener() {} },
+        orderNotificationsFeedback: { textContent: "" }
+    };
+    const context = {
+        document: { getElementById: (id) => elements[id] || null },
+        window: { PushManager: {}, Notification: {} },
+        navigator: { serviceWorker: { getRegistration: async () => registration, ready: Promise.resolve(registration) } },
+        PushManager: {},
+        Notification: { permission: "granted", requestPermission: async () => { permissionRequests++; return "granted"; } },
+        API_BASE_URL: "https://api.example",
+        lastOrderToken: "order-one",
+        fetch: async (url, options) => {
+            calls.push({ url, body: JSON.parse(options.body) });
+            return { ok: true, json: async () => ({ message: "ok" }) };
+        }
+    };
+    vm.runInNewContext(source, context);
+    assert.equal(await context.window.linkCustomerPushToOrder("22222222-2222-4222-8222-222222222222"), true);
+    assert.equal(permissionRequests, 0);
+    assert.equal(subscribeCalls, 0);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].body.tracking_token, "22222222-2222-4222-8222-222222222222");
+    assert.equal(elements.enableOrderNotifications.disabled, true);
+});
+
+test("the same customer device can be linked to more than one order", async () => {
+    const previousEnv = {
+        VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
+        VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
+        VAPID_SUBJECT: process.env.VAPID_SUBJECT
+    };
+    process.env.VAPID_PUBLIC_KEY = "public-key";
+    process.env.VAPID_PRIVATE_KEY = "private-key";
+    process.env.VAPID_SUBJECT = "mailto:test@example.com";
+    try {
+        const inserts = [];
+        const dbp = { query: async (sql, params) => {
+            if (sql.startsWith("SELECT id FROM orders WHERE tracking_token")) return [[{ id: params[0] === "11111111-1111-4111-8111-111111111111" ? 11 : 12 }]];
+            if (sql.startsWith("INSERT INTO customer_push_subscriptions")) { inserts.push(params); return [{ affectedRows: 1 }]; }
+            throw new Error(`Unexpected SQL in customer push test: ${sql}`);
+        } };
+        const routes = new Map();
+        const app = new Proxy({}, { get: (_target, method) => (...args) => routes.set(`${method} ${args[0]}`, args.slice(1)) });
+        createFeatures(app, { dbp, pool: {}, requireAdmin: (_req, _res, next) => next(), webpush: { setVapidDetails() {} } });
+        const handler = routes.get("post /api/customer/features/push-subscription").at(-1);
+        const sub = { endpoint: "https://push.example/customer-device", keys: { p256dh: "public", auth: "secret" } };
+        for (const token of ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"]) {
+            const response = jsonResponse();
+            await handler({ body: { tracking_token: token, subscription: sub } }, response);
+            assert.equal(response.statusCode, 200);
+        }
+        assert.deepEqual(inserts.map((params) => params[0]), [11, 12]);
+        assert.equal(inserts[0][1], inserts[1][1]);
+    } finally {
+        for (const [key, value] of Object.entries(previousEnv)) {
+            if (value === undefined) delete process.env[key]; else process.env[key] = value;
+        }
+    }
 });
 
 function couponDeleteHarness({ coupon, redemptionCount = 0 }) {

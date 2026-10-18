@@ -12,6 +12,16 @@ function createFeatures(app, { dbp, pool, requireAdmin, webpush }) {
     if (pushReady) webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate);
 
     const cleanPhone = (value) => String(value || "").replace(/\D/g, "").slice(0, 20);
+    const storedArray = (value) => {
+        if (Array.isArray(value)) return value;
+        if (typeof value !== "string" || !value) return [];
+        try {
+            const parsed = JSON.parse(value);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch {
+            return [];
+        }
+    };
     const cleanText = (value, max = 255) => {
         const result = String(value ?? "").trim();
         return result ? result.slice(0, max) : null;
@@ -105,6 +115,16 @@ function createFeatures(app, { dbp, pool, requireAdmin, webpush }) {
         } catch (error) { errorResponse(res, error, "تعذر حفظ إعداد الإشعار"); }
     });
 
+    app.delete("/api/admin/features/push-subscription", requireAdmin, async (req, res) => {
+        const endpoint = String(req.body?.endpoint || "").trim();
+        if (!endpoint || endpoint.length > 4096) return res.status(400).json({ message: "بيانات الجهاز غير صحيحة" });
+        try {
+            const hash = endpointHash(endpoint);
+            await dbp.query("DELETE FROM admin_push_subscriptions WHERE endpoint_hash = ?", [hash]);
+            res.json({ message: "تم إيقاف إشعارات هذا الجهاز" });
+        } catch (error) { errorResponse(res, error, "تعذر إيقاف إشعارات هذا الجهاز"); }
+    });
+
     app.post("/api/customer/features/push-subscription", async (req, res) => {
         if (!pushReady) return res.status(503).json({ message: "إعداد إشعارات المتصفح غير مكتمل على السيرفر" });
         const token = String(req.body?.tracking_token || "").trim();
@@ -145,9 +165,7 @@ function createFeatures(app, { dbp, pool, requireAdmin, webpush }) {
     app.get("/api/admin/features/contacts", requireAdmin, async (_req, res) => {
         try {
             const [rows] = await dbp.query("SELECT staff_whatsapp_numbers FROM feature_settings WHERE id = 1 LIMIT 1");
-            let numbers = [];
-            try { numbers = JSON.parse(rows[0]?.staff_whatsapp_numbers || "[]"); } catch { numbers = []; }
-            res.json({ numbers: Array.isArray(numbers) ? numbers : [] });
+            res.set("Cache-Control", "no-store").json({ numbers: storedArray(rows[0]?.staff_whatsapp_numbers) });
         } catch (error) { errorResponse(res, error, "تعذر تحميل أرقام الموظفين"); }
     });
 
@@ -170,8 +188,7 @@ function createFeatures(app, { dbp, pool, requireAdmin, webpush }) {
             }
             const [items] = await dbp.query("SELECT product_name, quantity, weight_grams, unit_label, line_total FROM order_items WHERE order_id = ? ORDER BY id", [order.id]);
             const [settings] = await dbp.query("SELECT staff_whatsapp_numbers FROM feature_settings WHERE id = 1 LIMIT 1");
-            let numbers = [];
-            try { numbers = JSON.parse(settings[0]?.staff_whatsapp_numbers || "[]"); } catch { numbers = []; }
+            const numbers = storedArray(settings[0]?.staff_whatsapp_numbers);
             const lines = items.map((item) => `• ${item.product_name} × ${item.quantity ?? `${item.weight_grams || 0} غ`} — ${money(item.line_total).toLocaleString("en-US")} ل.س`);
             const claimUrl = order.staff_claim_token && !order.staff_claimed_by
                 ? `${req.protocol}://${req.get("host")}/claim.html?token=${encodeURIComponent(order.staff_claim_token)}`
@@ -180,7 +197,7 @@ function createFeatures(app, { dbp, pool, requireAdmin, webpush }) {
                 ? [`عنوان التوصيل: ${order.delivery_address || "لم يضف الزبون عنوانًا"}`, ...(order.delivery_lat !== null && order.delivery_lng !== null ? [`الموقع: https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${order.delivery_lat},${order.delivery_lng}`)}`] : [])]
                 : [];
             const message = [`طلب ${order.order_code}`, `الزبون: ${order.customer_name} (${order.customer_phone})`, `طريقة الاستلام: ${order.fulfillment_type === "delivery" ? "توصيل" : "استلام"}`, ...deliveryLines, ...lines, `الإجمالي: ${money(order.total).toLocaleString("en-US")} ل.س`, ...(order.staff_claimed_by ? [`استلمه: ${order.staff_claimed_by}`] : []), ...(claimUrl ? [`استلام تجهيز الطلب (الأسبق يثبته): ${claimUrl}`] : [])].join("\n");
-            res.json({ numbers, message, claim_url: claimUrl, claimed_by: order.staff_claimed_by });
+            res.set("Cache-Control", "no-store").json({ numbers, message, claim_url: claimUrl, claimed_by: order.staff_claimed_by });
         } catch (error) { errorResponse(res, error, "تعذر تجهيز رسالة واتساب"); }
     });
 

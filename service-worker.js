@@ -3,13 +3,13 @@
  * الملفات العامة فقط تُخزّن للعمل دون اتصال.
  * طلبات API وصفحات الإدارة وتسجيل الدخول تبقى من الشبكة مباشرة.
  */
-const CACHE_NAME = "kramish-pwa-commerce-v6-auto-coupons";
+const CACHE_NAME = "kramish-pwa-commerce-v7-customer-push";
 const CACHE_PREFIX = "kramish-pwa-";
 const APP_SHELL = [
     "./",
     "./index.html",
     "./style.css?v=12",
-    "./script.js?v=13",
+    "./script.js?v=14",
     "./manifest.webmanifest?v=1",
     "./icons/icon-192.png",
     "./icons/icon-512.png",

@@ -1680,6 +1680,9 @@ cartElement("checkoutForm")?.addEventListener("submit", async (event) => {
         lastOrderToken = data.tracking_token || null;
         toggleCartElement("enableOrderNotifications", Boolean(lastOrderToken));
         setCartText("orderNotificationsFeedback", "");
+        if (lastOrderToken && typeof window.linkCustomerPushToOrder === "function") {
+            void window.linkCustomerPushToOrder(lastOrderToken);
+        }
         // Keep a safe local list so the customer can revisit more than one order.
         saveMyOrder({ tracking_token: lastOrderToken, order_code: data.order_code });
         toggleCartElement("cartManageOrderButton", Boolean(lastOrderToken));
@@ -1744,6 +1747,10 @@ const MY_ORDERS_STORAGE_KEY = "kramish-my-orders-v1";
 const MY_ORDERS_MAX_SAVED = 15;
 const MY_ORDERS_TOKEN_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 let mySavedOrders = readMySavedOrders();
+window.getCustomerOrderTokensForPush = () => [...new Set([
+    ...mySavedOrders.map((order) => order.tracking_token),
+    lastOrderToken
+].filter((token) => MY_ORDERS_TOKEN_RE.test(String(token || ""))))];
 let myCurrentOrder = null;
 let myCurrentOrderToken = "";
 let myEditDraft = [];
