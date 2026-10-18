@@ -109,6 +109,9 @@ nav {
     flex-direction: column;
     gap: 7px;
     margin-top: 18px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
 }
 .nav-item {
     width: 100%;
@@ -157,9 +160,15 @@ nav {
     font-size: 11px;
     transition: .18s ease;
 }
-.sidebar > .view-site:first-of-type {
-    margin-top: auto;
+.sidebar-actions {
+    display: grid;
+    gap: 7px;
+    flex: 0 0 auto;
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid rgba(255,215,0,.14);
 }
+.sidebar-action-icon { font-size: 16px; line-height: 1; }
 .view-site:hover {
     background: rgba(208,164,45,.09);
 }
@@ -1077,6 +1086,12 @@ textarea:focus {
         font-size: 7px;
         line-height: 1.2;
     }
+    .sidebar-actions {
+        gap: 5px;
+        margin-top: 6px;
+        padding-top: 6px;
+    }
+    .sidebar-action-icon { font-size: 15px; }
     .main-content {
         width: calc(100% - 82px);
         max-width: calc(100% - 82px);

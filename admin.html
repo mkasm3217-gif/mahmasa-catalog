@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة إدارة المحمصة</title>
-    <link rel="stylesheet" href="admin.css?v=12">
+    <link rel="stylesheet" href="admin.css?v=13">
 <style>
 .logout-button { width: 100%; font-family: inherit; cursor: pointer; background: transparent; margin-top: 8px; }
 </style>
@@ -42,14 +42,16 @@
                 إعدادات المحمصة
             </button>
         </nav>
-        <a href="index.html" class="view-site">
-            عرض واجهة الزبون
-            <span>←</span>
-        </a>
-        <button type="button" class="view-site logout-button" id="logoutButton">
-            تسجيل الخروج
-            <span>↪</span>
-        </button>
+        <div class="sidebar-actions" aria-label="روابط الإدارة">
+            <a href="index.html" class="view-site">
+                <span class="sidebar-action-icon" aria-hidden="true">↗</span>
+                عرض واجهة الزبون
+            </a>
+            <button type="button" class="view-site logout-button" id="logoutButton">
+                <span class="sidebar-action-icon" aria-hidden="true">⎋</span>
+                تسجيل الخروج
+            </button>
+        </div>
     </aside>
     <main class="main-content">
         <!-- =========================
@@ -2299,6 +2301,6 @@ document.addEventListener("keydown", (event) => {
 });
 initializeAdmin();
 </script>
-<script src="/admin-features.js?v=8"></script>
+<script src="/admin-features.js?v=9"></script>
 </body>
 </html>

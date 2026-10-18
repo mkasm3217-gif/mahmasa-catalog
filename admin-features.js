@@ -38,6 +38,27 @@
       <section class="content-card feature-panel"><div class="card-header"><div><h2>مشاركة الطلب عبر واتساب</h2><p>أضف أرقام الموظفين مع مفتاح البلد، رقم واحد بكل سطر. المشاركة يدوية من تفاصيل الطلب.</p></div></div><form id="staffForm" class="feature-inline"><label class="feature-wide">أرقام الموظفين<textarea id="staffNumbers" rows="4" placeholder="9639xxxxxxxx&#10;9639xxxxxxxx"></textarea></label><button class="primary-button" type="submit">حفظ الأرقام</button></form><p id="staffFeedback" class="feature-feedback" role="status"></p><div class="feature-push"><div><strong>إشعار المدير عند الطلب الجديد</strong><p>فعّل الإشعارات على هذا الجهاز. يحتاج السيرفر مفاتيح Web Push.</p></div><button type="button" id="enableAdminPush" class="primary-button" aria-pressed="false" data-enabled="0">جارٍ التحقق من حالة الإشعارات...</button></div><p id="pushFeedback" class="feature-feedback" role="status"></p></section>`;
     main.appendChild(page);
 
+    // Add separators while typing so the date stays readable on mobile numeric keyboards.
+    for (const input of el("couponForm").querySelectorAll('[name="starts_at"], [name="ends_at"]')) {
+        input.addEventListener("input", () => {
+            const digitsBeforeCursor = input.value.slice(0, input.selectionStart).replace(/\D/g, "").length;
+            const digits = input.value.replace(/\D/g, "").slice(0, 8);
+            const year = digits.slice(0, 4);
+            const month = digits.slice(4, 6);
+            const day = digits.slice(6, 8);
+            input.value = year + (digits.length > 4 ? `/${month}` : "") + (digits.length > 6 ? `/${day}` : "");
+            if (document.activeElement === input) {
+                let seenDigits = 0;
+                let caret = 0;
+                while (caret < input.value.length && seenDigits < digitsBeforeCursor) {
+                    if (/\d/.test(input.value[caret])) seenDigits += 1;
+                    caret += 1;
+                }
+                input.setSelectionRange(caret, caret);
+            }
+        });
+    }
+
     async function loadCouponProducts() {
         const products = await api("/api/products");
         el("couponProducts").innerHTML = products.map((product) => `<option value="${Number(product.id)}">${esc(product.name)}</option>`).join("");
@@ -45,7 +66,8 @@
 
     async function loadCoupons() {
         const rows = await api("/api/admin/features/coupons");
-        el("couponsList").innerHTML = rows.length ? `<table class="coupon-admin-table"><thead><tr><th>الكوبون</th><th>المنتجات</th><th>الخصم</th><th>الحد الأدنى</th><th>المدة</th><th>الاستخدام</th><th>التحكم</th></tr></thead><tbody>${rows.map((coupon) => `<tr><td><strong class="coupon-code-label" dir="ltr">${esc(coupon.code)}</strong><span class="coupon-title-label">${esc(coupon.title)}</span></td><td>${coupon.product_scope === "all" ? "كل المنتجات" : `${coupon.product_scope === "exclude" ? "كل المنتجات عدا: " : "فقط: "}${esc(coupon.product_names || "لا توجد منتجات")}`}</td><td><strong>${coupon.discount_type === "percent" ? `${coupon.discount_value}%` : money(coupon.discount_value)}</strong></td><td>${Number(coupon.minimum_subtotal || 0) > 0 ? money(coupon.minimum_subtotal) : "بلا حد"}</td><td>${esc(coupon.starts_at || "دائم")}${coupon.ends_at ? ` — ${esc(coupon.ends_at)}` : ""}</td><td>${coupon.usage_count}${coupon.usage_limit ? ` / ${coupon.usage_limit}` : ""}</td><td><div class="coupon-actions"><button class="coupon-toggle-button ${Number(coupon.active) ? "is-active" : "is-paused"}" type="button" data-toggle-coupon="${coupon.id}" data-active="${Number(coupon.active) ? 1 : 0}">${Number(coupon.active) ? "إيقاف" : "تفعيل"}</button><button class="coupon-delete-button" type="button" data-delete-coupon="${coupon.id}" data-code="${esc(coupon.code)}">حذف</button></div></td></tr>`).join("")}</tbody></table>` : `<div class="coupon-empty-state"><strong>ما في كوبونات مضافة لسه</strong><span>عبّي النموذج فوق واضغط «إضافة الكوبون».</span></div>`;
+        const displayDate = (value) => String(value || "").replace(/^(\d{4})-(\d{2})-(\d{2})/, "$1/$2/$3");
+        el("couponsList").innerHTML = rows.length ? `<table class="coupon-admin-table"><thead><tr><th>الكوبون</th><th>المنتجات</th><th>الخصم</th><th>الحد الأدنى</th><th>المدة</th><th>الاستخدام</th><th>التحكم</th></tr></thead><tbody>${rows.map((coupon) => `<tr><td><strong class="coupon-code-label" dir="ltr">${esc(coupon.code)}</strong><span class="coupon-title-label">${esc(coupon.title)}</span></td><td>${coupon.product_scope === "all" ? "كل المنتجات" : `${coupon.product_scope === "exclude" ? "كل المنتجات عدا: " : "فقط: "}${esc(coupon.product_names || "لا توجد منتجات")}`}</td><td><strong>${coupon.discount_type === "percent" ? `${coupon.discount_value}%` : money(coupon.discount_value)}</strong></td><td>${Number(coupon.minimum_subtotal || 0) > 0 ? money(coupon.minimum_subtotal) : "بلا حد"}</td><td>${esc(displayDate(coupon.starts_at) || "دائم")}${coupon.ends_at ? ` — ${esc(displayDate(coupon.ends_at))}` : ""}</td><td>${coupon.usage_count}${coupon.usage_limit ? ` / ${coupon.usage_limit}` : ""}</td><td><div class="coupon-actions"><button class="coupon-toggle-button ${Number(coupon.active) ? "is-active" : "is-paused"}" type="button" data-toggle-coupon="${coupon.id}" data-active="${Number(coupon.active) ? 1 : 0}">${Number(coupon.active) ? "إيقاف" : "تفعيل"}</button><button class="coupon-delete-button" type="button" data-delete-coupon="${coupon.id}" data-code="${esc(coupon.code)}">حذف</button></div></td></tr>`).join("")}</tbody></table>` : `<div class="coupon-empty-state"><strong>ما في كوبونات مضافة لسه</strong><span>عبّي النموذج فوق واضغط «إضافة الكوبون».</span></div>`;
     }
 
     el("couponForm").addEventListener("submit", async (event) => {
