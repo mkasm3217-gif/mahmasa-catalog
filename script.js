@@ -508,6 +508,10 @@ async function loadProducts() {
         activeCoupons = coupons;
         allProducts = allProducts.map((product) => ({
             ...product,
+            has_product_offer: coupons.some((coupon) =>
+                coupon.product_scope === "include" &&
+                (coupon.product_ids || []).some((id) => Number(id) === Number(product.id))
+            ),
             coupon_badges: coupons.filter((coupon) => {
                 const ids = new Set((coupon.product_ids || []).map(Number));
                 const selected = ids.has(Number(product.id));
@@ -558,6 +562,9 @@ function filterProducts() {
                 }
             );
     }
+    // Put products with a currently active product-specific offer first.
+    // Stable sorting keeps the existing order within each group.
+    filtered.sort((a, b) => Number(Boolean(b.has_product_offer)) - Number(Boolean(a.has_product_offer)));
     displayProducts(
         filtered
     );
