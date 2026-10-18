@@ -26,7 +26,7 @@
     featureNav.type = "button";
     featureNav.className = "nav-item";
     featureNav.dataset.featurePage = "featureTools";
-    featureNav.innerHTML = "<span>✦</span> الكوبونات والإشعارات";
+    featureNav.innerHTML = "<span aria-hidden=\"true\">▧</span> الكوبونات والإشعارات";
     nav.insertBefore(featureNav, nav.querySelector('[data-page="settings"]'));
 
     const page = document.createElement("section");
